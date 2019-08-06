@@ -1,0 +1,51 @@
+<html lang="en">
+<% #head.html %>
+<body>
+<% #header.html %>
+<div class="MainContent SimpleFont">
+    <img src="chat.svg" class="HomeHeaderSvg"/>
+    <div style="position: absolute; top: 0px; left: 0px;">
+        <h2>What is this</h2>
+        <div>This is a simple chat application demonstrating Spring Boot capabilities such as:</div>
+        <ul>
+            <li>Authentication</li>
+            <ul>
+                <li>Using session validation (Login)</li>
+                <li>Using cookies (Remember me functionality)</li>
+                <li>Using basic authentication</li>
+            </ul>
+            <li>Self-signed HTTPS connection</li>
+            <li>Web socket</li>
+            <li>Download/Upload files</li>
+            <li>JPA persistence</li>
+            <li>Redirecting to login page for logging in, then redirecting to desired page after that</li>
+            <li>Caching files in memory for better performance (Reloads file based on date-modified)</li>
+            <li>Clearing expired session after 1-hour idle</li>
+            <li>Keeping sessions in memory for better performance</li>
+        </ul>
+        <div>This application also demonstrates some user interface capabilities such as:</div>
+        <ul>
+            <li>Modal</li>
+            <li>Toast or notification</li>
+            <li>Web socket</li>
+            <li>Responsive</li>
+            <li>HttpRequest</li>
+        </ul>
+        <h2>How to use</h2>
+        <div>Build application with "mvn package"</div>
+        <div>Run application with "java -jar target/simplechat-0.0.1-SNAPSHOT.jar"</div>
+        <div>Use Firefox or Chrome to open https://localhost:62600/ </div>
+        <div>Sign-up at least two user accounts</div>
+        <div>Start chatting, you can do the following:</div>
+        <ul>
+            <li>Send text massages</li>
+            <li>Upload files to create file messages</li>
+            <li>Download files by clicking on file-messages</li>
+        </ul>
+        <h2>About</h2>
+        <div>Masoud Taghavian (masoud.taghavian@gmail.com)</div>
+        <div>Enjoy!</div>
+    </div>
+</div>
+</body>
+</html>

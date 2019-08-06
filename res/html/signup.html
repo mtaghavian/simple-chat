@@ -1,0 +1,48 @@
+<html lang="en">
+<% #head.html %>
+<body>
+<% #header.html %>
+
+<div class="Modal" style="box-shadow: 0px 0px 10px #bbbbbb;">
+    <div class="SimpleText SimpleFont" style="float: left;margin-left: 20px;margin-top: 20px;">Firstname</div>
+    <input placeholder="" value="" class="Textfield" style="width:240px; height:40px;" type="text" id="firstname"/>
+    <br/>
+	
+	<div class="SimpleText SimpleFont" style="float: left;margin-left: 20px;margin-top: 20px;">Lastname</div>
+    <input placeholder="" value="" class="Textfield" style="width:240px; height:40px;" type="text" id="lastname"/>
+    <br/>
+	
+	<div class="SimpleText SimpleFont" style="float: left;margin-left: 20px;margin-top: 20px;">Username</div>
+    <input placeholder="" value="" class="Textfield" style="width:240px; height:40px;" type="text" id="username"/>
+    <br/>
+	
+    <div class="SimpleText SimpleFont" style="float: left;margin-left: 20px;margin-top: 20px;">Password</div>
+    <input placeholder="" value="" class="Textfield" style="width:240px; height:40px;" type="password" id="password"/>
+	
+    <br/><br/><br/>
+
+    <div id="signupRememberMe" onclick='checkboxUpdate("signupRememberMe")' class="MyCheckboxAndRadiobutton SimpleFont" selected="false" style="text-align: left;padding-left: 20px;">
+        <img src="checkbox0.svg" class="MyCheckboxAndRadiobuttonImg"/>
+        Remember me
+    </div>
+
+    <br/>
+    <input type="button" class="Button ButtonTransPrimary SimpleFont" value="SIGN UP" style="width:240px; height:40px;" onclick="signup()"/>
+    <br/><br/>
+</div>
+
+<script>
+    var func = function (event) {
+        if (event.keyCode === 13) {
+            event.preventDefault();
+            signup();
+        }
+    };
+    document.getElementById("firstname").addEventListener("keydown", func);
+    document.getElementById("lastname").addEventListener("keydown", func);
+    document.getElementById("username").addEventListener("keydown", func);
+    document.getElementById("password").addEventListener("keydown", func);
+</script>
+
+</body>
+</html>

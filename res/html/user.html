@@ -1,0 +1,74 @@
+<html lang="en">
+<% #head.html %>
+<body>
+
+<% #header.html %>
+
+<div id="ChatContent" class="MainContent ChatContent">
+</div>
+
+<div class="FooterHolder">
+    <div class="Footer">
+        <div class="MessageTypeLabel">Text message:</div>
+        <input placeholder="Message" value="" class="Textfield"
+           style="width:calc(100% - 200px); height:25px;" type="text" id="messageField"/>
+        <input type="button" class="Button ButtonTransPrimary SimpleFont" value="SEND" style="width:90px; height:25px;" onclick="sendMessage()"/>
+        <br><br>
+        <div class="MessageTypeLabel">File message:</div>
+        <form style="display: inline-block;height: 25px;" target="uploadFrame" method="POST" action="uploadFile" enctype="multipart/form-data">
+            <label class="Button ButtonTransPrimary SimpleFont" style="height: 2px;line-height: 2px;padding-left: 5px;">
+                <input type="file" name="file" style="height: 25px;" onchange="uploadFileChanged(this)"/> BROWSE
+                <label class="SimpleText SimpleFont" style="color: #717171;height: 25px;width: 100px;overflow: hidden; display:inline-flex; text-overflow: ellipsis; white-space: nowrap; line-height: 25px;padding-left: 5px;">File</label>
+            </label>
+            <label class="Button ButtonTransPrimary SimpleFont" style="height: 25px;line-height: 25px;">
+                <input type="submit"/> UPLOAD
+            </label>
+        </form>
+        <iframe class="UploadIFrame" name="uploadFrame"></iframe>
+    </div>
+</div>
+
+<script>
+    var func = function (event) {
+        if (event.keyCode === 13) {
+            event.preventDefault();
+            sendMessage();
+        }
+    };
+    document.getElementById("messageField").addEventListener("keydown", func);
+
+    var ws = null;
+    function wsConnect() {
+        ws = new WebSocket("wss://" + window.location.host + "/ws");
+        ws.onopen = function(){
+            console.log("ws.onopen");
+        };
+        ws.onmessage = function(evt){
+            console.log("ws.onmessage");
+            var content = document.getElementById("ChatContent");
+            var elem = evt.data;
+            content.insertAdjacentHTML("beforeend", elem);
+            content.scrollTop = content.scrollHeight;
+        };
+        ws.onclose = function(){
+            console.log("ws.onclose");
+            wsConnect();
+        };
+    }
+    wsConnect();
+    function sendMessage(){
+        if(ws == null){
+            return;
+        }
+        var msg = document.getElementById("messageField").value.trim();
+        if(msg === ""){
+            return;
+        }
+        ws.send(msg);
+        document.getElementById("messageField").value = "";
+    }
+</script>
+
+</body>
+</html>
+

@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+
+<!--
+	Bookmark:
+    	https://www.w3schools.com/graphics/svg_rect.asp
+        
+	Elements:
+    	Rectangle <rect>
+    	Circle <circle>
+    	Ellipse <ellipse>
+    	Line <line>
+    	Polyline <polyline>
+    	Polygon <polygon>
+    	Path <path>
+        	M = moveto
+			L = lineto
+			H = horizontal lineto
+			V = vertical lineto
+			C = curveto
+			S = smooth curveto
+			Q = quadratic Bézier curve
+			T = smooth quadratic Bézier curveto
+			A = elliptical Arc
+			Z = closepath
+-->
+
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" height="600" width="600">
+  <path d="M 150 0 L 75 200 L 225 200 Z" stroke="blue"
+  stroke-width="5" fill="none"/>
+  <path d="M 150 0 Q 75 200 225 200" stroke="green"
+  stroke-width="5" fill="none"/>
+  <g fill="black">
+    <circle id="pointA" cx="150" cy="0" r="6" />
+    <circle id="pointB" cx="75" cy="200" r="6" />
+    <circle id="pointC" cx="225" cy="200" r="6" />
+  </g>
+  <g font-size="30" font-family="sans-serif" fill="black" stroke="none" text-anchor="middle">
+    <text x="150" y="0" dx="-30" dy="30" transform="rotate(10)">Masoud</text>
+  </g>
+	<rect x="50" y="50" width="20" height="20" fill="red"/> 
+
+	<ellipse cx="50" cy="100" rx="40" ry="20" fill="blue"/> 
+
+	<line x1="270" y1="100" x2="250" y2="150" stroke-width="5" stroke="black" stroke-linecap="round"/> 
+	<path d="M 10 80 C 40 10, 65 10, 95 80 S 150 150, 180 80" stroke="black" stroke-width="5" fill="transparent"/>
+
+	<path d="M 10 80 Q 52.5 10, 95 80 T 180 80" stroke="red" stroke-width="3" fill="transparent"/>
+
+	<!-- Arc rx ry angle 0 0|1 xEnd yEnd -->
+	<path d="M 200 50 A 80 80 45 0 1 300 50" stroke="blue" stroke-width="3" fill="green"/>
+  Sorry, your browser does not support inline SVG.
+</svg>
+
