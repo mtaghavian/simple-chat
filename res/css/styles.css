@@ -31,7 +31,9 @@ input.Textfield {
 }
 
 input.Textfield:focus {
-    box-shadow: 0px 2px 0px #007bff;
+    box-shadow: 0px 1px 0px #007bff;
+    outline: none;
+    background-color:white;
 }
 
 .Modal {
@@ -387,6 +389,6 @@ input[type="submit"] {
     vertical-align: middle;
     height: 25px;
     width: 20px;
-    display: inline-block;
+    display: none;
     border: none;
 }

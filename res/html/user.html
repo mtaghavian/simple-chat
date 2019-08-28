@@ -15,12 +15,12 @@
         <input type="button" class="Button ButtonTransPrimary SimpleFont" value="SEND" style="width:90px; height:25px;" onclick="sendMessage()"/>
         <br><br>
         <div class="MessageTypeLabel">File message:</div>
-        <form style="display: inline-block;height: 25px;" target="uploadFrame" method="POST" action="uploadFile" enctype="multipart/form-data">
-            <label class="Button ButtonTransPrimary SimpleFont" style="height: 2px;line-height: 2px;padding-left: 5px;">
-                <input type="file" name="file" style="height: 25px;" onchange="uploadFileChanged(this)"/> BROWSE
-                <label class="SimpleText SimpleFont" style="color: #717171;height: 25px;width: 100px;overflow: hidden; display:inline-flex; text-overflow: ellipsis; white-space: nowrap; line-height: 25px;padding-left: 5px;">File</label>
+        <form style="display: inline-block;height: 25px;width: calc(100% - 100px);" target="uploadFrame" method="POST" action="uploadFile" enctype="multipart/form-data">
+            <label class="Button ButtonTransPrimary SimpleFont" style="width: calc(100% - 80px);">
+                <input type="file" name="file" style="" onchange="uploadFileChanged(this)"/> BROWSE
+                <label class="SimpleFont" style="padding-left: 5px;padding-right: 5px;color: #717171; width: calc(100% - 80px);overflow: hidden; display:inline-flex; text-overflow: ellipsis; white-space: nowrap;">File</label>
             </label>
-            <label class="Button ButtonTransPrimary SimpleFont" style="height: 25px;line-height: 25px;">
+            <label class="Button ButtonTransPrimary SimpleFont" style="padding-left: 5px;padding-right: 5px;height: 25px;line-height: 25px;">
                 <input type="submit"/> UPLOAD
             </label>
         </form>

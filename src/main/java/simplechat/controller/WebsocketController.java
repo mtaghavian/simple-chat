@@ -1,6 +1,7 @@
 package simplechat.controller;
 
-import simplechat.util.ByteUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.*;
@@ -8,6 +9,7 @@ import org.springframework.web.util.UriUtils;
 import simplechat.Repository.SessionRepository;
 import simplechat.model.Session;
 import simplechat.model.User;
+import simplechat.util.ByteUtils;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -25,6 +27,7 @@ public class WebsocketController implements WebSocketHandler {
 
     private final static Map<String, WebSocketSession> wsSessionIdMap = new HashMap<>();
     private final static Map<String, Session> sessionMap = new HashMap<>();
+    private Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Override
     public void afterConnectionEstablished(WebSocketSession wss) throws Exception {

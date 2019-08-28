@@ -172,6 +172,9 @@ function showChangePasswordForm() {
         };
         request.send();
     } else {
+        document.getElementById("changePasswordCP").value = "";
+        document.getElementById("changePasswordNP").value = "";
+        document.getElementById("changePasswordRP").value = "";
         form.style.display = "block";
     }
 }
