@@ -1,6 +1,5 @@
 package simplechat.controller;
 
-import simplechat.util.ByteUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
@@ -12,6 +11,7 @@ import simplechat.Repository.SessionRepository;
 import simplechat.Repository.UserRepository;
 import simplechat.model.Session;
 import simplechat.model.User;
+import simplechat.util.ByteUtils;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -163,11 +164,14 @@ public class MainController {
                 throw new RuntimeException("FileNotFound: " + file.getName());
             }
             InputStreamResource resource = new InputStreamResource(new FileInputStream(file));
-            return ResponseEntity.ok()
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=\"" + file.getName()+"\"")
-                    .contentType(mediaType)
+            ResponseEntity<InputStreamResource> body = ResponseEntity.ok()
+                    .header("Content-Type", "" + mediaType + ";charset=utf-8")
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; " +
+                            "filename=\"" + file.getName() + "\"; " +
+                            "filename*=UTF-8''" + URLEncoder.encode(file.getName(), "UTF-8").replace("+", "%20"))
                     .contentLength(file.length())
                     .body(resource);
+            return body;
         } catch (IOException ioex) {
             throw new RuntimeException("IOException while reading file: " + filename);
         }

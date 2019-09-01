@@ -1,6 +1,5 @@
 package simplechat.config;
 
-import simplechat.util.ByteUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -11,6 +10,7 @@ import simplechat.Repository.UserRepository;
 import simplechat.SimpleChatApplication;
 import simplechat.model.Session;
 import simplechat.model.User;
+import simplechat.util.ByteUtils;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
@@ -52,6 +52,9 @@ public class HttpInterceptor implements HandlerInterceptor {
             allowedFiles.add("/" + filename);
         }
         for (String filename : Objects.requireNonNull(new File(SimpleChatApplication.scriptResourcePath).list())) {
+            allowedFiles.add("/" + filename);
+        }
+        for (String filename : Objects.requireNonNull(new File(SimpleChatApplication.miscResourcePath).list())) {
             allowedFiles.add("/" + filename);
         }
         for (String filename : Objects.requireNonNull(new File(SimpleChatApplication.pageResourcePath).list())) {
@@ -134,6 +137,9 @@ public class HttpInterceptor implements HandlerInterceptor {
             } else if (uriLC.endsWith(".css")) {
                 response.setContentType("text/css");
                 response.getOutputStream().write(byteUtils.readBytes(new File((SimpleChatApplication.styleResourcePath + "/" + uri))));
+            } else if (uriLC.endsWith(".json")) {
+                response.setContentType("application/json");
+                response.getOutputStream().write(byteUtils.readBytes(new File((SimpleChatApplication.miscResourcePath + "/" + uri))));
             } else if (uriLC.endsWith(".js")) {
                 response.setContentType("text/javascript");
                 response.getOutputStream().write(byteUtils.readBytes(new File((SimpleChatApplication.scriptResourcePath + "/" + uri))));

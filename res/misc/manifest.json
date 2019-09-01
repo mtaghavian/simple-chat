@@ -1,0 +1,19 @@
+{
+  "short_name": "Simple Chat",
+  "name": "Simple Chat",
+  "icons": [
+    {
+      "src": "favicon.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#ffffff",
+  "display": "standalone",
+  "scope": "/",
+  "orientation": "portrait",
+  "dir": "rtl",
+  "theme_color": "#ffffff"
+}
+

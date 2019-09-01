@@ -1,6 +1,5 @@
 package simplechat;
 
-import simplechat.util.ByteUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
@@ -18,6 +17,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter
 import simplechat.Repository.UserRepository;
 import simplechat.config.HttpInterceptor;
 import simplechat.model.User;
+import simplechat.util.ByteUtils;
 
 import javax.annotation.PostConstruct;
 
@@ -30,6 +30,7 @@ public class SimpleChatApplication implements ApplicationContextAware {
     public static final String styleResourcePath = "res/css";
     public static final String scriptResourcePath = "res/js";
     public static final String imageResourcePath = "res/img";
+    public static final String miscResourcePath = "res/misc";
 
     @Autowired
     private UserRepository userRepository;
