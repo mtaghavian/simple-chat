@@ -14,9 +14,9 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.web.multipart.commons.CommonsMultipartResolver;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
-import simplechat.Repository.UserRepository;
 import simplechat.config.HttpInterceptor;
 import simplechat.model.User;
+import simplechat.repository.UserRepository;
 import simplechat.util.ByteUtils;
 
 import javax.annotation.PostConstruct;
@@ -53,7 +53,7 @@ public class SimpleChatApplication implements ApplicationContextAware {
             admin.setFirstname("Masoud");
             admin.setLastname("Taghavian");
             userRepository.save(admin);
-            
+
             User user = new User();
             user.setUsername("user");
             user.setPassword(byteUtils.hash("user"));

@@ -34,7 +34,7 @@ public class User extends BaseModel {
 
     @Transient
     private Boolean rememberMe;
-    
+
     public static String validateFirstname(String s) {
         int lb = 1, ub = 90;
         if (s.length() < lb || s.length() > ub) {

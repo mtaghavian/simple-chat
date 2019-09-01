@@ -1,4 +1,4 @@
-package simplechat.Repository;
+package simplechat.repository;
 
 import org.springframework.stereotype.Component;
 import simplechat.model.Session;

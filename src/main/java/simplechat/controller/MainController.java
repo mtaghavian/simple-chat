@@ -7,10 +7,10 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import simplechat.Repository.SessionRepository;
-import simplechat.Repository.UserRepository;
 import simplechat.model.Session;
 import simplechat.model.User;
+import simplechat.repository.SessionRepository;
+import simplechat.repository.UserRepository;
 import simplechat.util.ByteUtils;
 
 import javax.servlet.http.Cookie;

@@ -5,11 +5,11 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
-import simplechat.Repository.SessionRepository;
-import simplechat.Repository.UserRepository;
 import simplechat.SimpleChatApplication;
 import simplechat.model.Session;
 import simplechat.model.User;
+import simplechat.repository.SessionRepository;
+import simplechat.repository.UserRepository;
 import simplechat.util.ByteUtils;
 
 import javax.servlet.http.Cookie;

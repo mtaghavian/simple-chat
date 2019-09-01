@@ -6,9 +6,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.*;
 import org.springframework.web.util.UriUtils;
-import simplechat.Repository.SessionRepository;
 import simplechat.model.Session;
 import simplechat.model.User;
+import simplechat.repository.SessionRepository;
 import simplechat.util.ByteUtils;
 
 import java.io.ByteArrayInputStream;
