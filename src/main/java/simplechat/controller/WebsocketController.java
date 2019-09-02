@@ -5,8 +5,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.*;
-import org.springframework.web.util.UriUtils;
 import simplechat.model.Session;
+import simplechat.model.UploadedFile;
 import simplechat.model.User;
 import simplechat.repository.SessionRepository;
 import simplechat.util.ByteUtils;
@@ -120,23 +120,23 @@ public class WebsocketController implements WebSocketHandler {
         return false;
     }
 
-    public void sendFile(User sender, File file) throws IOException {
+    public void sendFile(User sender, File file, UploadedFile uploadedFile) throws IOException {
         for (String sid : wsSessionIdMap.keySet()) {
             User receiver = sessionMap.get(sid).getUser();
             String text;
-            String id = UriUtils.encode(file.getName(), "UTF-8");
+            String id = "" + uploadedFile.getId();
             if (sender.getId().equals(receiver.getId())) {
                 Map<String, String> params = new HashMap<>();
                 params.put("fileIcon", "inline-block");
                 params.put("fileLink", " id=\"" + id + "\" onclick=\'download(\"" + id + "\")\' ");
-                params.put("body", file.getName() + " (" + byteUtils.humanReadableSize(file.length()) + ")");
+                params.put("body", uploadedFile.getName() + " (" + byteUtils.humanReadableSize(file.length()) + ")");
                 params.put("date", getTime());
                 text = byteUtils.readPage("/chat-msg-right.html", params);
             } else {
                 Map<String, String> params = new HashMap<>();
                 params.put("fileIcon", "inline-block");
                 params.put("fileLink", " onclick=\'download(\"" + id + "\")\' ");
-                params.put("body", file.getName() + " (" + byteUtils.humanReadableSize(file.length()) + ")");
+                params.put("body", uploadedFile.getName() + " (" + byteUtils.humanReadableSize(file.length()) + ")");
                 params.put("date", getTime());
                 params.put("title", sender.getFirstname() + " " + sender.getLastname());
                 text = byteUtils.readPage("/chat-msg-left.html", params);

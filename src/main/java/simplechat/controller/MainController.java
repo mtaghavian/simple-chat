@@ -8,8 +8,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import simplechat.model.Session;
+import simplechat.model.UploadedFile;
 import simplechat.model.User;
 import simplechat.repository.SessionRepository;
+import simplechat.repository.UploadedFileRepository;
 import simplechat.repository.UserRepository;
 import simplechat.util.ByteUtils;
 
@@ -24,6 +26,8 @@ import java.io.IOException;
 import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 
 @RestController
 public class MainController {
@@ -39,6 +43,9 @@ public class MainController {
 
     @Autowired
     private WebsocketController websocketController;
+
+    @Autowired
+    private UploadedFileRepository uploadedFileRepository;
 
     public static final String uploadDir = "uploads";
 
@@ -141,39 +148,26 @@ public class MainController {
         }
     }
 
-    @GetMapping(value = "/download1/{file_name}")
-    public void download1(@PathVariable("file_name") String filename, HttpServletResponse response) {
+    @GetMapping(value = "/download")
+    public ResponseEntity<InputStreamResource> download2(@RequestParam String fileId, HttpServletResponse response) {
         try {
-            File file = new File(filename);
-            if (!file.exists()) {
-                return;
+            Optional<UploadedFile> uploadedFile = uploadedFileRepository.findById(UUID.fromString(fileId));
+            if (!uploadedFile.isPresent()) {
+                throw new RuntimeException("FileNotFound: " + fileId);
             }
-            byteUtils.copy(new FileInputStream(new File(filename)), response.getOutputStream(), true, false);
-            response.flushBuffer();
-        } catch (IOException ex) {
-            throw new RuntimeException("IOException when reading " + filename);
-        }
-    }
-
-    @GetMapping(value = "/download2")
-    public ResponseEntity<InputStreamResource> download2(@RequestParam String filename, HttpServletResponse response) {
-        try {
-            MediaType mediaType = byteUtils.getMediaType(uploadDir + "/" + filename);
-            File file = new File(uploadDir + "/" + filename);
-            if (!file.exists()) {
-                throw new RuntimeException("FileNotFound: " + file.getName());
-            }
+            MediaType mediaType = byteUtils.getMediaType(uploadDir + "/" + uploadedFile.get().getName());
+            File file = new File(uploadDir + "/" + fileId);
             InputStreamResource resource = new InputStreamResource(new FileInputStream(file));
             ResponseEntity<InputStreamResource> body = ResponseEntity.ok()
-                    .header("Content-Type", "" + mediaType + ";charset=utf-8")
+                    .contentType(mediaType)
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; " +
-                            "filename=\"" + file.getName() + "\"; " +
-                            "filename*=UTF-8''" + URLEncoder.encode(file.getName(), "UTF-8").replace("+", "%20"))
+                            "filename=\"" + uploadedFile.get().getName() + "\"; " +
+                            "filename*=UTF-8''" + URLEncoder.encode(uploadedFile.get().getName(), "UTF-8").replace("+", "%20"))
                     .contentLength(file.length())
                     .body(resource);
             return body;
         } catch (IOException ioex) {
-            throw new RuntimeException("IOException while reading file: " + filename);
+            throw new RuntimeException("IOException while reading file: " + fileId);
         }
     }
 
@@ -186,10 +180,13 @@ public class MainController {
         params.put("pageTitle", "title");
         boolean success = true;
         try {
-            File transferFile = new File(uploadDir + "/" + file.getOriginalFilename());
+            UploadedFile uploadedFile = new UploadedFile();
+            uploadedFile.setName(file.getOriginalFilename());
+            uploadedFileRepository.save(uploadedFile);
+            File transferFile = new File(uploadDir + "/" + uploadedFile.getId());
             FileOutputStream os = new FileOutputStream(transferFile);
             byteUtils.copy(file.getInputStream(), os, false, true);
-            websocketController.sendFile(getUser(httpSession), transferFile);
+            websocketController.sendFile(getUser(httpSession), transferFile, uploadedFile);
         } catch (Exception e) {
             e.printStackTrace();
             success = false;

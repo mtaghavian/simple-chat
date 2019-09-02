@@ -223,7 +223,7 @@ function hideComponent(comp) {
 }
 
 function download(fId){
-    window.location.href = "/download2?filename=" + fId;
+    window.location.href = "/download?fileId=" + fId;
 }
 
 function uploadFileChanged(elem){

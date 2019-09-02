@@ -139,21 +139,39 @@ public class ByteUtils {
     }
 
     public String humanReadableSize(long len) {
-        String lstr = "Too Big";
-        if (len < 1000) {
-            lstr = len + " B";
-        } else if (len < 1000000) {
-            lstr = len / 1000.0 + " KB";
-        } else if (len < 1000000000) {
-            lstr = (len / 1000) / 1000.0 + " MB";
-        } else if (len < 1000000000000L) {
-            lstr = (len / 1000000) / 1000.0 + " GB";
-        } else if (len < 1000000000000000L) {
-            lstr = (len / 1000000000L) / 1000.0 + " TB";
-        } else if (len < 1000000000000000000L) {
-            lstr = (len / 1000000000000L) / 1000.0 + " PB";
+        double size = 0;
+        String fix = null;
+        if (len < 1024) {
+            size = len;
+            fix = "B";
+        } else if (len < 1024L * 1024L) {
+            size = len / 1024.0;
+            fix = "KiB";
+        } else if (len < 1024L * 1024L * 1024L) {
+            size = len / 1024.0 / 1024.0;
+            fix = "MiB";
+        } else if (len < 1024L * 1024L * 1024L * 1024L) {
+            size = len / 1024.0 / 1024.0 / 1024.0;
+            fix = "GiB";
+        } else if (len < 1024L * 1024L * 1024L * 1024L * 1024L) {
+            size = len / 1024.0 / 1024.0 / 1024.0 / 1024.0;
+            fix = "TiB";
+        } else if (len < 1024L * 1024L * 1024L * 1024L * 1024L * 1024L) {
+            size = len / 1024.0 / 1024.0 / 1024.0 / 1024.0 / 1024.0;
+            fix = "PiB";
         }
-        return lstr;
+        if (fix == null) {
+            return "Too Big";
+        } else {
+            String sizeStr = String.format("%.3f", size);
+            while (sizeStr.endsWith("0")) {
+                sizeStr = sizeStr.substring(0, sizeStr.length() - 1);
+            }
+            if (sizeStr.endsWith(".")) {
+                sizeStr = sizeStr.substring(0, sizeStr.length() - 1);
+            }
+            return sizeStr + " " + fix;
+        }
     }
 
 }
