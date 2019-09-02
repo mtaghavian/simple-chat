@@ -14,6 +14,7 @@ import simplechat.util.ByteUtils;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.time.LocalTime;
 import java.util.*;
 
 @Component
@@ -53,12 +54,14 @@ public class WebsocketController implements WebSocketHandler {
                 params.put("fileIcon", "none");
                 params.put("fileLink", "");
                 params.put("body", message);
+                params.put("date", getTime());
                 text = byteUtils.readPage("/chat-msg-right.html", params);
             } else {
                 Map<String, String> params = new HashMap<>();
                 params.put("fileIcon", "none");
                 params.put("fileLink", "");
                 params.put("body", message);
+                params.put("date", getTime());
                 params.put("title", sender.getFirstname() + " " + sender.getLastname());
                 text = byteUtils.readPage("/chat-msg-left.html", params);
             }
@@ -104,6 +107,14 @@ public class WebsocketController implements WebSocketHandler {
         }
     }
 
+    private String getTime() {
+        String time = "" + LocalTime.now();
+        if (time.contains(".")) {
+            time = time.substring(0, time.indexOf('.'));
+        }
+        return time;
+    }
+
     @Override
     public boolean supportsPartialMessages() {
         return false;
@@ -119,12 +130,14 @@ public class WebsocketController implements WebSocketHandler {
                 params.put("fileIcon", "inline-block");
                 params.put("fileLink", " id=\"" + id + "\" onclick=\'download(\"" + id + "\")\' ");
                 params.put("body", file.getName() + " (" + byteUtils.humanReadableSize(file.length()) + ")");
+                params.put("date", getTime());
                 text = byteUtils.readPage("/chat-msg-right.html", params);
             } else {
                 Map<String, String> params = new HashMap<>();
                 params.put("fileIcon", "inline-block");
                 params.put("fileLink", " onclick=\'download(\"" + id + "\")\' ");
                 params.put("body", file.getName() + " (" + byteUtils.humanReadableSize(file.length()) + ")");
+                params.put("date", getTime());
                 params.put("title", sender.getFirstname() + " " + sender.getLastname());
                 text = byteUtils.readPage("/chat-msg-left.html", params);
             }
