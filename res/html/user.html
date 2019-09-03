@@ -10,11 +10,11 @@
 <div class="FooterHolder">
     <div class="Footer">
         <input placeholder="Write a message" value="" class="Textfield"
-           style="width:calc(100% - 160px); height:40px;margin-left: 10px;margin-top: 10px;padding-left: 5px;" type="text" id="messageField"/>
-        <input type="button" class="Button ButtonTransPrimary SimpleFont" value="SEND" style="width:50px; height:25px;" onclick="sendMessage()"/>
-        <form name="uploadForm" style="display: inline-block;height: 25px;width: 80px;" target="uploadFrame" method="POST" action="uploadFile" enctype="multipart/form-data">
+           style="width:calc(100% - 110px); height:40px;margin-left: 10px;margin-top: 10px;" type="text" id="messageField"/>
+        <img src="send.svg" class="SendTextSvg Button ButtonTransPrimary" onclick="sendMessage()"/>
+        <form name="uploadForm" style="display: inline-block;height: 25px;width: 22px;" target="uploadFrame" method="POST" action="uploadFile" enctype="multipart/form-data">
             <label class="Button ButtonTransPrimary SimpleFont" style="">
-                <input class="" type="file" name="file" style="" onchange="uploadFileChanged(this)"/> SEND FILE
+                <input class="" type="file" name="file" style="" onchange="uploadFileChanged(this)"/> <img src="attachment.svg" class="SendTextSvg" />
                 <label class="SimpleFont" style="display:none;">File</label>
             </label>
             <label>

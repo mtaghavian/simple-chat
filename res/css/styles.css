@@ -23,6 +23,8 @@ body {
 
 input.Textfield {
     margin: 0px 0px 0px 0px;
+    padding-left: 5px;
+    padding-right: 5px;
     border: none;
     font-family: arimo, sans-serif;
     box-shadow: 0px 2px 0px #eeeeee;
@@ -33,7 +35,7 @@ input.Textfield {
 input.Textfield:focus {
     box-shadow: 0px 1px 0px #007bff;
     outline: none;
-    background-color:white;
+    background-color: white;
 }
 
 .Modal {
@@ -196,7 +198,7 @@ a {
 }
 
 .ChatContent {
-    height: calc(100% - 145px);
+    height: calc(100% - 125px);
     overflow: auto;
 }
 
@@ -280,7 +282,7 @@ a {
     margin: auto;
 }
 
-@media screen and (max-width: 700px) {
+@media only screen and (max-width: 700px) {
     .Header {
         width: 100%;
     }
@@ -336,6 +338,21 @@ a {
     width: 15px;
     height: 15px;
     padding: 10px 0px 10px 10px;
+    vertical-align: middle;
+}
+
+.OptionsSvg {
+    width: 15px;
+    height: 15px;
+    padding: 10px 0px 10px 10px;
+    vertical-align: middle;
+    display: none;
+}
+
+.SendTextSvg {
+    width: 22px;
+    height: 22px;
+    padding: 10px 10px 10px 10px;
     vertical-align: middle;
 }
 
