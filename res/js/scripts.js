@@ -230,6 +230,7 @@ function uploadFileChanged(elem){
     if ('files' in elem) {
         if (elem.files.length !== 0) {
             elem.nextElementSibling.innerText =  elem.files[0].name;
+            document.uploadForm.submit();
         }
     }
 }

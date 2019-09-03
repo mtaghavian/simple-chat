@@ -9,19 +9,16 @@
 
 <div class="FooterHolder">
     <div class="Footer">
-        <div class="MessageTypeLabel">Text message:</div>
-        <input placeholder="Message" value="" class="Textfield"
-           style="width:calc(100% - 200px); height:25px;" type="text" id="messageField"/>
-        <input type="button" class="Button ButtonTransPrimary SimpleFont" value="SEND" style="width:90px; height:25px;" onclick="sendMessage()"/>
-        <br><br>
-        <div class="MessageTypeLabel">File message:</div>
-        <form style="display: inline-block;height: 25px;width: calc(100% - 100px);" target="uploadFrame" method="POST" action="uploadFile" enctype="multipart/form-data">
-            <label class="Button SimpleFont" style="width: calc(100% - 80px);">
-                <input class="" type="file" name="file" style="" onchange="uploadFileChanged(this)"/> BROWSE
-                <label class="SimpleFont" style="padding-left: 5px;padding-right: 5px;color: #717171; width: calc(100% - 80px);overflow: hidden; display:inline-flex; text-overflow: ellipsis; white-space: nowrap;">File</label>
+        <input placeholder="Write a message" value="" class="Textfield"
+           style="width:calc(100% - 160px); height:40px;margin-left: 10px;margin-top: 10px;padding-left: 5px;" type="text" id="messageField"/>
+        <input type="button" class="Button ButtonTransPrimary SimpleFont" value="SEND" style="width:50px; height:25px;" onclick="sendMessage()"/>
+        <form name="uploadForm" style="display: inline-block;height: 25px;width: 80px;" target="uploadFrame" method="POST" action="uploadFile" enctype="multipart/form-data">
+            <label class="Button ButtonTransPrimary SimpleFont" style="">
+                <input class="" type="file" name="file" style="" onchange="uploadFileChanged(this)"/> SEND FILE
+                <label class="SimpleFont" style="display:none;">File</label>
             </label>
-            <label class="Button ButtonTransPrimary SimpleFont" style="padding-left: 5px;padding-right: 5px;height: 25px;line-height: 25px;">
-                <input type="submit"/> UPLOAD
+            <label>
+                <input type="submit"/>
             </label>
         </form>
         <iframe class="UploadIFrame" name="uploadFrame"></iframe>

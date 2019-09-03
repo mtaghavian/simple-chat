@@ -251,7 +251,7 @@ a {
 .FooterHolder {
     position: fixed;
     bottom: 0px;
-    height: 80px;
+    height: 60px;
     background-color: #ffffff;
     width: 100%;
     z-index: 1;
@@ -260,7 +260,7 @@ a {
 .Footer {
     box-shadow: 0px -2px 0px #c9baff;
     background-color: #eeeeee;
-    height: 80px;
+    height: 60px;
     width: 700px;
     margin: auto;
 }
