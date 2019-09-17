@@ -210,8 +210,8 @@ function changePassword() {
 function showComponent(comp) {
     var form = document.getElementById(comp);
     if (form != null) {
-       form.style.display = "block";
-       form.style.removeProperty("display");
+        form.style.display = "block";
+        form.style.removeProperty("display");
     }
 }
 
@@ -222,15 +222,21 @@ function hideComponent(comp) {
     }
 }
 
-function download(fId){
+function download(fId) {
     window.location.href = "/download?fileId=" + fId;
 }
 
-function uploadFileChanged(elem){
+function uploadFileChanged(elem) {
     if ('files' in elem) {
         if (elem.files.length !== 0) {
-            elem.nextElementSibling.innerText =  elem.files[0].name;
+            elem.nextElementSibling.innerText = elem.files[0].name;
             document.uploadForm.submit();
         }
     }
+}
+
+function toggleSidebarDisplay() {
+    var sidebar = document.getElementById("SidebarContent");
+    var dis = sidebar.style.display;
+    sidebar.style.display = (dis === "none") ? "block" : "none";
 }

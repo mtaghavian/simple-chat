@@ -4,7 +4,13 @@
 
 <% #header.html %>
 
-<div id="ChatContent" class="MainContent ChatContent">
+<div id="UserContent" class="UserContent" style="">
+    <div id="ChatContent" class="ChatContent">
+
+    </div>
+    <div id="SidebarContent" class="SidebarContent">
+
+    </div>
 </div>
 
 <div class="FooterHolder">
@@ -34,6 +40,18 @@
     };
     document.getElementById("messageField").addEventListener("keydown", func);
 
+    function mediaFunc(x) {
+        var sidebar = document.getElementById("SidebarContent");
+        if (x.matches) {
+            sidebar.style.display = "none";
+        } else {
+            sidebar.style.display = "block";
+        }
+    }
+    var matchWidth = window.matchMedia("(max-width: 700px)")
+    mediaFunc(matchWidth);
+    matchWidth.addListener(mediaFunc)
+
     var ws = null;
     function wsConnect() {
         ws = new WebSocket("wss://" + window.location.host + "/ws");
@@ -42,10 +60,11 @@
         };
         ws.onmessage = function(evt){
             console.log("ws.onmessage");
-            var content = document.getElementById("ChatContent");
+            var chatContent = document.getElementById("ChatContent");
+            var userContent = document.getElementById("UserContent");
             var elem = evt.data;
-            content.insertAdjacentHTML("beforeend", elem);
-            content.scrollTop = content.scrollHeight;
+            chatContent.insertAdjacentHTML("beforeend", elem);
+            chatContent.scrollTop = chatContent.scrollHeight;
         };
         ws.onclose = function(){
             console.log("ws.onclose");
