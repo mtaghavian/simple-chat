@@ -31,6 +31,7 @@ public class SimpleChatApplication implements ApplicationContextAware {
     public static final String scriptResourcePath = "res/js";
     public static final String imageResourcePath = "res/img";
     public static final String miscResourcePath = "res/misc";
+    public static final String adminUsername = "admin";
 
     @Autowired
     private UserRepository userRepository;
@@ -48,15 +49,15 @@ public class SimpleChatApplication implements ApplicationContextAware {
     public void starter() {
         if (userRepository.findByUsername("admin") == null) {
             User admin = new User();
-            admin.setUsername("admin");
+            admin.setUsername(adminUsername);
             admin.setPassword(byteUtils.hash("admin"));
             admin.setFirstname("Masoud");
             admin.setLastname("Taghavian");
             userRepository.save(admin);
 
             User user = new User();
-            user.setUsername("user");
-            user.setPassword(byteUtils.hash("user"));
+            user.setUsername("fg");
+            user.setPassword(byteUtils.hash("123456"));
             user.setFirstname("Fariba");
             user.setLastname("Ghaffari");
             userRepository.save(user);

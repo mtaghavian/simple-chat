@@ -2,6 +2,7 @@ package simplechat.repository;
 
 import org.springframework.stereotype.Component;
 import simplechat.model.Session;
+import simplechat.model.User;
 
 import java.util.*;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -65,6 +66,22 @@ public class SessionRepository {
             List<Session> list = new ArrayList<>();
             for (String id : map.keySet()) {
                 if (map.get(id).getLastModified() < l) {
+                    list.add(map.get(id));
+                }
+            }
+            return list;
+        } finally {
+            lock.readLock().unlock();
+        }
+    }
+
+    public List<Session> findByUsername(String username) {
+        try {
+            lock.readLock().lock();
+            List<Session> list = new ArrayList<>();
+            for (String id : map.keySet()) {
+                User user = map.get(id).getUser();
+                if ((user != null) && (user.getUsername().equals(username))) {
                     list.add(map.get(id));
                 }
             }

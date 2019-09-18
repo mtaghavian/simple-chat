@@ -7,6 +7,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import simplechat.SimpleChatApplication;
 import simplechat.model.Session;
 import simplechat.model.UploadedFile;
 import simplechat.model.User;
@@ -146,6 +147,20 @@ public class MainController {
             String exStr = byteUtils.serializeException(e);
             return "<code>" + exStr + "</code>";
         }
+    }
+
+    @GetMapping("/deleteAccount")
+    public String deleteAccount(HttpServletRequest request, HttpServletResponse response) {
+        HttpSession httpSession = request.getSession();
+        Session session = sessionRepository.findById(httpSession.getId()).get();
+        User user = session.getUser();
+        String logout = logout(request, response);
+        if ("Redirecting".equals(logout) && !SimpleChatApplication.adminUsername.equals(user.getUsername())) {
+            sessionRepository.findByUsername(httpSession.getId())
+                    .forEach(x -> x.setUser(null));
+            userRepository.deleteById(user.getId());
+        }
+        return logout;
     }
 
     @GetMapping(value = "/download")

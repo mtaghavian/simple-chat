@@ -40,7 +40,6 @@ public class HttpInterceptor implements HandlerInterceptor {
         allowedUrls.add("/");
         allowedUrls.add("/home");
         allowedUrls.add("/index");
-        allowedUrls.add("/logout");
         allowedUrls.add("/login-helper");
         allowedUrls.add("/signup");
         allowedUrls.add("/signup-helper");
@@ -176,6 +175,15 @@ public class HttpInterceptor implements HandlerInterceptor {
             Map<String, String> params = new HashMap<>();
             putHeaderParams(params, session.getUser());
             params.put("pageTitle", uri.substring(1));
+            if (uri.equals("/user")) {
+                params.put("optionsSvg",
+                        "<img src=\"options.svg\" " +
+                                "id=\"OptionsSvg\" " +
+                                "class=\"Button ButtonTransPrimary\"" +
+                                "onclick='toggleSidebarDisplay()'/>");
+            } else {
+                params.put("optionsSvg", "");
+            }
             String html = byteUtils.readPage(uri + ".html", params);
             response.setContentType("text/html");
             response.getOutputStream().write(html.getBytes("UTF-8"));

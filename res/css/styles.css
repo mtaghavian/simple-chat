@@ -45,7 +45,7 @@ input.Textfield:focus {
     margin-left: auto;
     margin-right: auto;
     position: absolute;
-    top: 120px;
+    top: 80px;
     width: 280px;
     left: calc(50% - 140px);
     z-index: 10;
@@ -208,21 +208,22 @@ a {
 .ChatContent {
     height: 100%;
     margin-right: 10px;
-    width: calc(100% - 240px);
+    width: calc(100% - 230px);
     float: right;
     overflow: auto;
     box-shadow: 0px 0px 10px #dddddd;
 }
 
 .SidebarContent {
-    background-color: #cccccc;
+    background-color: #ffe8f6;
     margin-left: 10px;
     position: absolute;
-    height: 100%;
+    height: calc(100% + 60px);
     width: 200px;
     float: left;
     box-shadow: 0px 0px 10px #c9baff;
     opacity: 0.5;
+    z-index: 2;
 }
 
 .ChatMessage {
@@ -273,21 +274,15 @@ a {
     vertical-align: middle;
 }
 
-.FooterHolder {
-    position: fixed;
-    bottom: 0px;
-    height: 60px;
-    background-color: #ffffff;
-    width: 100%;
-    z-index: 1;
-}
-
-.Footer {
+.ChatFooter {
     box-shadow: 0px -2px 0px #c9baff;
     background-color: #eeeeee;
     height: 60px;
-    width: 700px;
-    margin: auto;
+    width: 470px;
+    position: absolute;
+    bottom: -60px;
+    left: 220px;
+    z-index: 1;
 }
 
 .MainContent {
@@ -310,11 +305,15 @@ a {
         width: 100%;
     }
 
-    .Footer {
+    .ChatFooter {
+        left: 0px;
+        bottom: -70px;
         width: 100%;
     }
 
     .MainContent {
+        margin-left: 10px;
+        margin-right: 10px;
         width: 100%;
     }
 
@@ -323,7 +322,8 @@ a {
     }
 
     .ChatContent {
-        width: calc(100% - 20px);
+        margin-right: 0px;
+        width: 100%;
     }
 
     #OptionsSvg {
@@ -375,7 +375,8 @@ a {
 #OptionsSvg {
     width: 15px;
     height: 15px;
-    padding: 10px 0px 10px 10px;
+    margin-left: 10px;
+    padding: 10px 10px 10px 10px;
     vertical-align: middle;
     display: none;
 }

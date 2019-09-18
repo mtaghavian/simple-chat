@@ -11,12 +11,9 @@
     <div id="SidebarContent" class="SidebarContent">
 
     </div>
-</div>
-
-<div class="FooterHolder">
-    <div class="Footer">
+    <div class="ChatFooter">
         <input placeholder="Write a message" value="" class="Textfield"
-           style="width:calc(100% - 110px); height:40px;margin-left: 10px;margin-top: 10px;" type="text" id="messageField"/>
+               style="width:calc(100% - 110px); height:40px;margin-left: 10px;margin-top: 10px;" type="text" id="messageField"/>
         <img src="send.svg" class="SendTextSvg Button ButtonTransPrimary" onclick="sendMessage()"/>
         <form name="uploadForm" style="display: inline-block;height: 25px;width: 22px;" target="uploadFrame" method="POST" action="uploadFile" enctype="multipart/form-data">
             <label class="Button ButtonTransPrimary SimpleFont" style="">
@@ -50,7 +47,7 @@
     }
     var matchWidth = window.matchMedia("(max-width: 700px)")
     mediaFunc(matchWidth);
-    matchWidth.addListener(mediaFunc)
+    matchWidth.addListener(mediaFunc);
 
     var ws = null;
     function wsConnect() {
