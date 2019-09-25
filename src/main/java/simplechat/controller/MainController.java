@@ -201,7 +201,9 @@ public class MainController {
             File transferFile = new File(uploadDir + "/" + uploadedFile.getId());
             FileOutputStream os = new FileOutputStream(transferFile);
             byteUtils.copy(file.getInputStream(), os, false, true);
-            websocketController.sendFile(getUser(httpSession), transferFile, uploadedFile);
+            uploadedFile.setLength(transferFile.length());
+            uploadedFileRepository.save(uploadedFile);
+            websocketController.sendFile(getUser(httpSession), uploadedFile);
         } catch (Exception e) {
             e.printStackTrace();
             success = false;

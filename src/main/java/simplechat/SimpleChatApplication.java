@@ -32,6 +32,7 @@ public class SimpleChatApplication implements ApplicationContextAware {
     public static final String imageResourcePath = "res/img";
     public static final String miscResourcePath = "res/misc";
     public static final String adminUsername = "admin";
+    public static final String broadcastUsername = "broadcast";
 
     @Autowired
     private UserRepository userRepository;
@@ -55,12 +56,26 @@ public class SimpleChatApplication implements ApplicationContextAware {
             admin.setLastname("Taghavian");
             userRepository.save(admin);
 
-            User user = new User();
-            user.setUsername("fg");
-            user.setPassword(byteUtils.hash("123456"));
-            user.setFirstname("Fariba");
-            user.setLastname("Ghaffari");
-            userRepository.save(user);
+            User u1 = new User();
+            u1.setUsername("fg");
+            u1.setPassword(byteUtils.hash("123456"));
+            u1.setFirstname("Fariba");
+            u1.setLastname("Ghaffari");
+            userRepository.save(u1);
+
+            User u2 = new User();
+            u2.setUsername("hh");
+            u2.setPassword(byteUtils.hash("123456"));
+            u2.setFirstname("Hasan");
+            u2.setLastname("Hasani");
+            userRepository.save(u2);
+
+            User bcUSer = new User();
+            bcUSer.setUsername(broadcastUsername);
+            bcUSer.setPassword(byteUtils.hash("123456"));
+            bcUSer.setFirstname("Broadcast");
+            bcUSer.setLastname("");
+            userRepository.save(bcUSer);
         }
     }
 

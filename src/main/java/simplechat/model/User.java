@@ -14,7 +14,7 @@ import javax.persistence.Transient;
 @Getter
 @Setter
 @Table(name = "Users") // because a table with this class name may exist (reserved names)
-public class User extends BaseModel {
+public class User extends BaseModel implements Comparable<User> {
 
     @Column(nullable = false, unique = true, length = 100)
     private String username;
@@ -107,5 +107,14 @@ public class User extends BaseModel {
             problem = User.validatePassword(user.getPassword());
         }
         return problem;
+    }
+
+    @Override
+    public int compareTo(User user) {
+        return getPresentation().compareTo(user.getPresentation());
+    }
+
+    public String getPresentation() {
+        return firstname + " " + lastname;
     }
 }

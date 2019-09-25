@@ -8,7 +8,10 @@ import simplechat.SimpleChatApplication;
 import javax.servlet.ServletContext;
 import java.io.*;
 import java.security.MessageDigest;
+import java.text.DateFormat;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -172,6 +175,12 @@ public class ByteUtils {
             }
             return sizeStr + " " + fix;
         }
+    }
+
+    public String formatTime(long t) {
+        Date d = new Date(t);
+        DateFormat formatter = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT, Locale.getDefault());
+        return formatter.format(d);
     }
 
 }

@@ -16,4 +16,7 @@ public class UploadedFile extends BaseModel {
 
     @Column(length = 200)
     private String name;
+
+    @Column
+    private Long length;
 }

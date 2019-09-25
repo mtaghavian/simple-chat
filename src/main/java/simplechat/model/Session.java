@@ -4,6 +4,7 @@ package simplechat.model;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.web.socket.WebSocketSession;
 
 @NoArgsConstructor
 @Getter
@@ -17,6 +18,10 @@ public class Session {
     private Long lastModified;
 
     private String redirectedUri;
+
+    private WebSocketSession webSocketSession;
+
+    private String chateeUsername;
 
     public Session(String id, User user, Long lastModified) {
         this.id = id;

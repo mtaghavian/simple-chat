@@ -6,17 +6,15 @@
 
 <div id="UserContent" class="UserContent" style="">
     <div id="ChatContent" class="ChatContent">
-
     </div>
     <div id="SidebarContent" class="SidebarContent">
-
     </div>
     <div class="ChatFooter">
         <input placeholder="Write a message" value="" class="Textfield"
                style="width:calc(100% - 110px); height:40px;margin-left: 10px;margin-top: 10px;" type="text" id="messageField"/>
         <img src="send.svg" class="SendTextSvg Button ButtonTransPrimary" onclick="sendMessage()"/>
         <form name="uploadForm" style="display: inline-block;height: 25px;width: 22px;" target="uploadFrame" method="POST" action="uploadFile" enctype="multipart/form-data">
-            <label class="Button ButtonTransPrimary SimpleFont" style="">
+            <label class="Button ButtonTransPrimary SimpleFont" style="display: inline-block">
                 <input class="" type="file" name="file" style="" onchange="uploadFileChanged(this)"/> <img src="attachment.svg" class="SendTextSvg" />
                 <label class="SimpleFont" style="display:none;">File</label>
             </label>
@@ -58,10 +56,20 @@
         ws.onmessage = function(evt){
             console.log("ws.onmessage");
             var chatContent = document.getElementById("ChatContent");
-            var userContent = document.getElementById("UserContent");
+            var sidebarContent = document.getElementById("SidebarContent");
             var elem = evt.data;
-            chatContent.insertAdjacentHTML("beforeend", elem);
-            chatContent.scrollTop = chatContent.scrollHeight;
+            var cmd = elem.substring(0, elem.indexOf("\n"));
+            var body = elem.substring(elem.indexOf("\n") + 1, elem.length);
+            console.log(body);
+            if(cmd == "users") {
+                sidebarContent.innerHTML = '';
+                sidebarContent.insertAdjacentHTML("beforeend", body);
+                sidebarContent.scrollTop = sidebarContent.scrollHeight;
+                chatContent.innerHTML = '';
+            } else {
+                chatContent.insertAdjacentHTML("beforeend", body);
+                chatContent.scrollTop = chatContent.scrollHeight;
+            }
         };
         ws.onclose = function(){
             console.log("ws.onclose");
@@ -77,7 +85,14 @@
         if(msg === ""){
             return;
         }
-        ws.send(msg);
+        ws.send("msg\n" + msg);
+        document.getElementById("messageField").value = "";
+    }
+    function changePage(uname){
+        if(ws == null){
+            return;
+        }
+        ws.send("change-page\n" + uname);
         document.getElementById("messageField").value = "";
     }
 </script>
