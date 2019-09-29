@@ -119,7 +119,9 @@ public class MainController {
                 dbUser.setUsername(user.getUsername());
                 dbUser.setPassword(byteUtils.hash(user.getPassword()));
                 userRepository.saveAndFlush(dbUser);
-                return loginHelper(request, response, user);
+                String result = loginHelper(request, response, user);
+                websocketController.updateAllUserLists(null);
+                return result;
             } else {
                 return "No\n" + problem;
             }
@@ -160,6 +162,7 @@ public class MainController {
                     .forEach(x -> x.setUser(null));
             userRepository.deleteById(user.getId());
         }
+        websocketController.updateAllUserLists(user.getUsername());
         return logout;
     }
 

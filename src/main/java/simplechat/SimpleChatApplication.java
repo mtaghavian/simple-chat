@@ -56,11 +56,18 @@ public class SimpleChatApplication implements ApplicationContextAware {
             admin.setLastname("Taghavian");
             userRepository.save(admin);
 
+            User bcUSer = new User();
+            bcUSer.setUsername(broadcastUsername);
+            bcUSer.setPassword(byteUtils.hash("123456"));
+            bcUSer.setFirstname("Broadcast");
+            bcUSer.setLastname("");
+            userRepository.save(bcUSer);
+
             User u1 = new User();
-            u1.setUsername("fg");
+            u1.setUsername("me");
             u1.setPassword(byteUtils.hash("123456"));
-            u1.setFirstname("Fariba");
-            u1.setLastname("Ghaffari");
+            u1.setFirstname("Mohsen");
+            u1.setLastname("Esmaeili");
             userRepository.save(u1);
 
             User u2 = new User();
@@ -69,13 +76,6 @@ public class SimpleChatApplication implements ApplicationContextAware {
             u2.setFirstname("Hasan");
             u2.setLastname("Hasani");
             userRepository.save(u2);
-
-            User bcUSer = new User();
-            bcUSer.setUsername(broadcastUsername);
-            bcUSer.setPassword(byteUtils.hash("123456"));
-            bcUSer.setFirstname("Broadcast");
-            bcUSer.setLastname("");
-            userRepository.save(bcUSer);
         }
     }
 

@@ -353,6 +353,14 @@ a {
         box-shadow: none;
     }
 
+    .SidebarContent {
+        top: 0px;
+        width: 95%;
+        left: 0px;
+        opacity: 0.9;
+        box-shadow: 0px 0px 10px #999999;
+    }
+
     #OptionsSvg {
         display: inline-block !important;
     }

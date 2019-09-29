@@ -7,7 +7,7 @@
 <div id="UserContent" class="UserContent" style="">
     <div id="ChatContent" class="ChatContent">
     </div>
-    <div id="SidebarContent" class="SidebarContent">
+    <div id="SidebarContent" class="SidebarContent" onclick="sidebarClicked()">
     </div>
     <div class="ChatFooter">
         <input placeholder="Write a message" value="" class="Textfield"
@@ -35,17 +35,27 @@
     };
     document.getElementById("messageField").addEventListener("keydown", func);
 
+    var hasWideScreen = true;
     function mediaFunc(x) {
         var sidebar = document.getElementById("SidebarContent");
         if (x.matches) {
+            hasWideScreen = false;
             sidebar.style.display = "none";
         } else {
+            hasWideScreen = true;
             sidebar.style.display = "block";
         }
     }
     var matchWidth = window.matchMedia("(max-width: 700px)")
     mediaFunc(matchWidth);
     matchWidth.addListener(mediaFunc);
+
+    function sidebarClicked() {
+        if(!hasWideScreen){
+            var sidebar = document.getElementById("SidebarContent");
+            sidebar.style.display = "none";
+        }
+    }
 
     var ws = null;
     function wsConnect() {
@@ -60,12 +70,14 @@
             var elem = evt.data;
             var cmd = elem.substring(0, elem.indexOf("\n"));
             var body = elem.substring(elem.indexOf("\n") + 1, elem.length);
-            console.log(body);
             if(cmd == "users") {
                 sidebarContent.innerHTML = '';
                 sidebarContent.insertAdjacentHTML("beforeend", body);
                 sidebarContent.scrollTop = sidebarContent.scrollHeight;
+            } else if(cmd == "page") {
                 chatContent.innerHTML = '';
+                chatContent.insertAdjacentHTML("beforeend", body);
+                chatContent.scrollTop = chatContent.scrollHeight;
             } else {
                 chatContent.insertAdjacentHTML("beforeend", body);
                 chatContent.scrollTop = chatContent.scrollHeight;

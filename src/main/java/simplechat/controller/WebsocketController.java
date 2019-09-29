@@ -32,86 +32,72 @@ public class WebsocketController implements WebSocketHandler {
     @Autowired
     private SessionRepository sessionRepository;
 
-    private static Map<String, Map<String, Integer>> unreadCountMap = new HashMap<>();
-    private static ReentrantLock unreadCountMapLock = new ReentrantLock(true);
-    private static Map<String, Map<String, List<Message>>> messageMap = new HashMap<>();
-    private static ReentrantLock messageMapLock = new ReentrantLock(true);
-
-    private final static Map<String, Session> sessionMap = new HashMap<>();
+    private static ReentrantLock lock = new ReentrantLock(true);
     private Logger logger = LoggerFactory.getLogger(this.getClass());
+
+    private static Map<String, Map<String, Integer>> unreadCountMap = new HashMap<>();
+    private static Map<String, Map<String, List<Message>>> messageMap = new HashMap<>();
+    private final static Map<String, Session> sessionMap = new HashMap<>();
 
     @Override
     public void afterConnectionEstablished(WebSocketSession wss) throws IOException {
-        Session session = getSession(wss);
-        if (session != null) {
-            session.setWebSocketSession(wss);
-            session.setChateeUsername(SimpleChatApplication.broadcastUsername);
-            sessionMap.put(wss.getId(), session);
-
-            session.getWebSocketSession().sendMessage(new TextMessage(
-                    createUsersListUIComponent(session.getUser().getUsername(), session.getChateeUsername())));
+        try {
+            lock.lock();
+            Session session = getSession(wss);
+            if ((session != null) && (session.getUser() != null)) {
+                session.setWebSocketSession(wss);
+                sessionMap.put(wss.getId(), session);
+                changePage(SimpleChatApplication.broadcastUsername, session, session.getUser());
+                session.getWebSocketSession().sendMessage(new TextMessage(
+                        createUsersListUIComponent(session.getUser().getUsername(), session.getChateeUsername())));
+            }
+        } finally {
+            lock.unlock();
         }
     }
 
     @Override
     public void handleMessage(WebSocketSession wss, WebSocketMessage<?> webSocketMessage) throws Exception {
-        if (!sessionMap.containsKey(wss.getId())) {
-            return;
-        }
-        Session currentSession = sessionMap.get(wss.getId());
-        User currentUser = currentSession.getUser();
-        String payload = ((TextMessage) webSocketMessage).getPayload();
-        String cmd = payload.substring(0, payload.indexOf("\n"));
-        String body = payload.substring(payload.indexOf("\n") + 1, payload.length());
-        if ("msg".equals(cmd)) {
-            Message msg = new Message();
-            msg.setTextMessage(true);
-            msg.setBody(body);
-            msg.setDate(System.currentTimeMillis());
-            msg.setSender(currentUser.getPresentation());
-            msg.setSelf(true);
+        try {
+            lock.lock();
+            if (!sessionMap.containsKey(wss.getId())) {
+                return;
+            }
+            Session currentSession = sessionMap.get(wss.getId());
+            User currentUser = currentSession.getUser();
+            String payload = ((TextMessage) webSocketMessage).getPayload();
+            String cmd = payload.substring(0, payload.indexOf("\n"));
+            String body = payload.substring(payload.indexOf("\n") + 1, payload.length());
+            if ("msg".equals(cmd)) {
+                Message msg = new Message();
+                msg.setTextMessage(true);
+                msg.setBody(body);
+                msg.setDate(System.currentTimeMillis());
+                msg.setSender(currentUser.getPresentation());
+                msg.setSelf(true);
 
-            routeMessage(currentUser.getUsername(), msg);
-        } else if ("change-page".equals(cmd)) {
-            String chatee = body;
-            currentSession.setChateeUsername(chatee);
-            currentSession.getWebSocketSession().sendMessage(new TextMessage(
-                    createUsersListUIComponent(currentSession.getUser().getUsername(), chatee)));
-            messageMapLock.lock();
-            String messagesStr;
-            try {
-                updateMessageMap(userRepository.findAll());
-                List<Message> messages = messageMap.get(currentUser.getUsername()).get(chatee);
-                StringBuilder sb = new StringBuilder();
-                for (int i = 0; i < messages.size(); i++) {
-                    Message m = messages.get(i);
-                    if (m.isTextMessage()) {
-                        sb.append(createTextMessageUIComponent(m));
-                    } else {
-                        sb.append(createFileMessageUIComponent(m));
-                    }
-                }
-                messagesStr = sb.toString();
-            } finally {
-                messageMapLock.unlock();
+                routeMessage(currentUser.getUsername(), msg);
+            } else if ("change-page".equals(cmd)) {
+                String chatee = body;
+                changePage(chatee, currentSession, currentUser);
+            } else {
+                logger.error("Unsupported command!");
             }
-            currentSession.getWebSocketSession().sendMessage(new TextMessage("msg\n" + messagesStr));
-            unreadCountMapLock.lock();
-            try {
-                updateUnreadCountMap(userRepository.findAll());
-                unreadCountMap.get(currentUser.getUsername()).put(chatee, 0);
-            } finally {
-                unreadCountMapLock.unlock();
-            }
-        } else {
-            logger.error("Unsupported command!");
+        } finally {
+            lock.unlock();
         }
+
     }
 
     @Override
     public void afterConnectionClosed(WebSocketSession wss, CloseStatus closeStatus) throws Exception {
-        if (sessionMap.containsKey(wss.getId())) {
-            sessionMap.remove(wss.getId());
+        try {
+            lock.lock();
+            if (sessionMap.containsKey(wss.getId())) {
+                sessionMap.remove(wss.getId());
+            }
+        } finally {
+            lock.unlock();
         }
     }
 
@@ -132,7 +118,33 @@ public class WebsocketController implements WebSocketHandler {
         msg.setSender(sender.getPresentation());
         msg.setSelf(true);
         msg.setId(uploadedFile.getId());
-        routeMessage(sender.getUsername(), msg);
+        try {
+            lock.lock();
+            routeMessage(sender.getUsername(), msg);
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public void updateAllUserLists(String excludeUsername) {
+        try {
+            lock.lock();
+            sessionMap.values().forEach(x -> {
+                try {
+                    if (x.getUser() != null) {
+                        if (excludeUsername != null && x.getChateeUsername().equals(excludeUsername)) {
+                            x.setChateeUsername(SimpleChatApplication.broadcastUsername);
+                        }
+                        x.getWebSocketSession().sendMessage(new TextMessage(
+                                createUsersListUIComponent(x.getUser().getUsername(), x.getChateeUsername())));
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
+        } finally {
+            lock.unlock();
+        }
     }
 
     private Session getSession(WebSocketSession wss) {
@@ -205,29 +217,22 @@ public class WebsocketController implements WebSocketHandler {
 
     private String createUsersListUIComponent(String username, String activeUsername) throws IOException {
         List<User> users = userRepository.findAll();
+        User broadcastUser = users.stream().filter(x -> x.getUsername().equals(SimpleChatApplication.broadcastUsername))
+                .collect(Collectors.toList()).get(0);
+        users.remove(broadcastUser);
         Collections.sort(users);
-        int fi = 0;
-        for (int i = 0; i < users.size(); i++) {
-            if (activeUsername.equals(users.get(i).getUsername())) {
-                fi = i;
-                break;
-            }
-        }
-        if (fi != 0) {
-            User u = users.get(fi);
-            users.remove(fi);
-            users.add(0, u);
-        }
+        users.add(0, broadcastUser);
         String text = "users\n";
         Map<String, String> params = new HashMap<>();
-        params.put("name", users.get(0).getPresentation());
-        text += byteUtils.readPage("/sidebar-entry-active.html", params) + "\n";
-        unreadCountMapLock.lock();
-        try {
-            updateUnreadCountMap(users);
-            Map<String, Integer> countMap = unreadCountMap.get(username);
-            for (int i = 1; i < users.size(); i++) {
-                User user = users.get(i);
+        updateUnreadCountMap(users);
+        Map<String, Integer> countMap = unreadCountMap.get(username);
+        for (int i = 0; i < users.size(); i++) {
+            User user = users.get(i);
+            params.clear();
+            if (user.getUsername().equals(activeUsername)) {
+                params.put("name", user.getPresentation());
+                text += byteUtils.readPage("/sidebar-entry-active.html", params) + "\n";
+            } else {
                 params.put("name", user.getPresentation());
                 params.put("onclick", " onclick=\'changePage(\"" + user.getUsername() + "\")\' ");
                 Integer count = countMap.get(user.getUsername());
@@ -235,8 +240,6 @@ public class WebsocketController implements WebSocketHandler {
                         "<div class=\"SidebarEntryUnreadCount SimpleText SimpleFont\">" + count + "</div>");
                 text += byteUtils.readPage("/sidebar-entry-passive.html", params) + "\n";
             }
-        } finally {
-            unreadCountMapLock.unlock();
         }
         return text;
     }
@@ -249,13 +252,13 @@ public class WebsocketController implements WebSocketHandler {
             for (User to : users) {
                 map.putIfAbsent(to.getUsername(), 0);
             }
-            for (String un : map.keySet()) {
+            for (Object un : map.keySet().toArray()) {
                 if (!usernameSet.contains(un)) {
                     map.remove(un);
                 }
             }
         }
-        for (String un : unreadCountMap.keySet()) {
+        for (Object un : unreadCountMap.keySet().toArray()) {
             if (!usernameSet.contains(un)) {
                 unreadCountMap.remove(un);
             }
@@ -270,84 +273,92 @@ public class WebsocketController implements WebSocketHandler {
             for (User to : users) {
                 map.computeIfAbsent(to.getUsername(), k -> new ArrayList<>());
             }
-            for (String un : map.keySet()) {
+            for (Object un : map.keySet().toArray()) {
                 if (!usernameSet.contains(un)) {
                     map.remove(un);
                 }
             }
         }
-        for (String un : messageMap.keySet()) {
+        for (Object un : messageMap.keySet().toArray()) {
             if (!usernameSet.contains(un)) {
                 messageMap.remove(un);
             }
         }
     }
 
-    public void routeMessage(String senderUsername, Message msg) throws IOException {
-        messageMapLock.lock();
-        try {
-            Session currentSession = getUserSession(senderUsername);
-            String chatee = currentSession.getChateeUsername();
-            updateMessageMap(userRepository.findAll());
-            messageMap.get(senderUsername).get(chatee).add(msg);
-            currentSession.getWebSocketSession().sendMessage(new TextMessage(
-                    "msg\n" + (msg.isTextMessage() ? createTextMessageUIComponent(msg) : createFileMessageUIComponent(msg))
-            ));
-            Message cloneMsg = msg.clone();
-            cloneMsg.setSelf(false);
-            if (chatee.equals(SimpleChatApplication.broadcastUsername)) {
-                for (String username : messageMap.keySet()) {
-                    if (username.equals(senderUsername)) {
-                        continue;
-                    }
-                    messageMap.get(username).get(SimpleChatApplication.broadcastUsername).add(cloneMsg);
-
-                    Session userSession = getUserSession(username);
-                    if ((userSession != null) && userSession.getChateeUsername().equals(SimpleChatApplication.broadcastUsername)) {
-                        userSession.getWebSocketSession().sendMessage(new TextMessage(
-                                "msg\n" + (cloneMsg.isTextMessage() ? createTextMessageUIComponent(cloneMsg)
-                                        : createFileMessageUIComponent(cloneMsg))
-                        ));
-                    } else {
-                        unreadCountMapLock.lock();
-                        try {
-                            updateUnreadCountMap(userRepository.findAll());
-                            Integer cnt = unreadCountMap.get(username).get(SimpleChatApplication.broadcastUsername) + 1;
-                            unreadCountMap.get(username).put(SimpleChatApplication.broadcastUsername, cnt);
-                        } finally {
-                            unreadCountMapLock.unlock();
-                        }
-                        if (userSession != null) {
-                            userSession.getWebSocketSession().sendMessage(new TextMessage(
-                                    createUsersListUIComponent(userSession.getUser().getUsername(), userSession.getChateeUsername())));
-                        }
-                    }
-                }
+    private void changePage(String chatee, Session session, User user) throws IOException {
+        updateMessageMap(userRepository.findAll());
+        session.setChateeUsername(chatee);
+        session.getWebSocketSession().sendMessage(new TextMessage(
+                createUsersListUIComponent(session.getUser().getUsername(), chatee)));
+        String messagesStr;
+        List<Message> messages = messageMap.get(user.getUsername()).get(chatee);
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < messages.size(); i++) {
+            Message m = messages.get(i);
+            if (m.isTextMessage()) {
+                sb.append(createTextMessageUIComponent(m));
             } else {
-                messageMap.get(chatee).get(senderUsername).add(cloneMsg);
-                Session chateeSession = getUserSession(chatee);
-                if ((chateeSession != null) && chateeSession.getChateeUsername().equals(senderUsername)) {
-                    chateeSession.getWebSocketSession().sendMessage(new TextMessage(
+                sb.append(createFileMessageUIComponent(m));
+            }
+        }
+        messagesStr = sb.toString();
+        session.getWebSocketSession().sendMessage(new TextMessage("page\n" + messagesStr));
+
+        updateUnreadCountMap(userRepository.findAll());
+        unreadCountMap.get(user.getUsername()).put(chatee, 0);
+    }
+
+    private void routeMessage(String senderUsername, Message msg) throws IOException {
+        updateMessageMap(userRepository.findAll());
+        Session currentSession = getUserSession(senderUsername);
+        String chatee = currentSession.getChateeUsername();
+        messageMap.get(senderUsername).get(chatee).add(msg);
+        currentSession.getWebSocketSession().sendMessage(new TextMessage(
+                "msg\n" + (msg.isTextMessage() ? createTextMessageUIComponent(msg) : createFileMessageUIComponent(msg))
+        ));
+        Message cloneMsg = msg.clone();
+        cloneMsg.setSelf(false);
+        if (chatee.equals(SimpleChatApplication.broadcastUsername)) {
+            for (String username : messageMap.keySet()) {
+                if (username.equals(senderUsername)) {
+                    continue;
+                }
+                messageMap.get(username).get(SimpleChatApplication.broadcastUsername).add(cloneMsg);
+
+                Session userSession = getUserSession(username);
+                if ((userSession != null) && userSession.getChateeUsername().equals(SimpleChatApplication.broadcastUsername)) {
+                    userSession.getWebSocketSession().sendMessage(new TextMessage(
                             "msg\n" + (cloneMsg.isTextMessage() ? createTextMessageUIComponent(cloneMsg)
                                     : createFileMessageUIComponent(cloneMsg))
                     ));
                 } else {
-                    unreadCountMapLock.lock();
-                    try {
-                        updateUnreadCountMap(userRepository.findAll());
-                        Integer cnt = unreadCountMap.get(chatee).get(senderUsername) + 1;
-                        unreadCountMap.get(chatee).put(senderUsername, cnt);
-                    } finally {
-                        unreadCountMapLock.unlock();
-                    }
-                    if (chateeSession != null) {
-                        chateeSession.getWebSocketSession().sendMessage(new TextMessage(
-                                createUsersListUIComponent(chateeSession.getUser().getUsername(), chateeSession.getChateeUsername())));
+                    updateUnreadCountMap(userRepository.findAll());
+                    Integer cnt = unreadCountMap.get(username).get(SimpleChatApplication.broadcastUsername) + 1;
+                    unreadCountMap.get(username).put(SimpleChatApplication.broadcastUsername, cnt);
+                    if (userSession != null) {
+                        userSession.getWebSocketSession().sendMessage(new TextMessage(
+                                createUsersListUIComponent(userSession.getUser().getUsername(), userSession.getChateeUsername())));
                     }
                 }
             }
-        } finally {
-            messageMapLock.unlock();
+        } else {
+            messageMap.get(chatee).get(senderUsername).add(cloneMsg);
+            Session chateeSession = getUserSession(chatee);
+            if ((chateeSession != null) && chateeSession.getChateeUsername().equals(senderUsername)) {
+                chateeSession.getWebSocketSession().sendMessage(new TextMessage(
+                        "msg\n" + (cloneMsg.isTextMessage() ? createTextMessageUIComponent(cloneMsg)
+                                : createFileMessageUIComponent(cloneMsg))
+                ));
+            } else {
+                updateUnreadCountMap(userRepository.findAll());
+                Integer cnt = unreadCountMap.get(chatee).get(senderUsername) + 1;
+                unreadCountMap.get(chatee).put(senderUsername, cnt);
+                if (chateeSession != null) {
+                    chateeSession.getWebSocketSession().sendMessage(new TextMessage(
+                            createUsersListUIComponent(chateeSession.getUser().getUsername(), chateeSession.getChateeUsername())));
+                }
+            }
         }
     }
 
