@@ -35,3 +35,8 @@ This application also demonstrates some user interface capabilities such as:
 Masoud Taghavian (masoud.taghavian@gmail.com)  
 Enjoy!
 
+## Screenshots
+![screenshot1](images/sc1.png "Login page")
+![screenshot2](images/sc2.png "Chat page")
+![screenshot3](images/sc3.png "Change password dialog")
+
