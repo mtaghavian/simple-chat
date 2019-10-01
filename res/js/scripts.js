@@ -223,7 +223,7 @@ function hideComponent(comp) {
 }
 
 function download(fId) {
-    window.location.href = "/download?fileId=" + fId;
+    document.getElementById('FileTransferIFrame').src = "/download?fileId=" + fId;
 }
 
 function uploadFileChanged(elem) {

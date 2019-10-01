@@ -236,7 +236,9 @@ a {
     width: calc(100% - 230px);
     float: right;
     overflow: auto;
-    box-shadow: 0px 0px 10px #dddddd;
+    border-radius: 5px;
+    border: 1px solid #c9baff;
+    border-bottom-style: none;
 }
 
 .SidebarContent {
@@ -247,38 +249,39 @@ a {
     height: calc(100% + 60px);
     width: 200px;
     float: left;
-    box-shadow: 0px 0px 10px #dddddd;
+    border-radius: 5px;
+    border: 1px solid #c9baff;
     opacity: 1;
     z-index: 2;
 }
 
 .ChatMessage {
     position: relative;
-    left: 3%;
-    width: 94%;
+    left: 10px;
+    width: calc(100% - 20px);
     overflow: hidden;
 }
 
 .ChatMessageRight {
     cursor: pointer;
     float: right;
-    margin: 10px 10px 10px 10px;
+    margin: 5px 0px 5px 5px;
     padding: 10px 10px 10px 10px;
-    box-shadow: 5px 0px 0px #c9baff;
-    /*border-radius: 20px;*/
-    /*border: 2px solid #c9baff;*/
-    background-color: #ebedff;
+    /*box-shadow: 5px 0px 0px #c9baff;*/
+    border-radius: 5px;
+    border: 1px solid #c9baff;
+    background-color: #f1f2ff;
 }
 
 .ChatMessageLeft {
     cursor: pointer;
     float: left;
-    margin: 10px 10px 10px 10px;
+    margin: 5px 5px 5px 0px;
     padding: 10px 10px 10px 10px;
-    box-shadow: -5px 0px 0px #ffb669;
-    /*border-radius: 20px;*/
-    /*border: 2px solid #ffb669;*/
-    background-color: #ffe6db;
+    /*box-shadow: -5px 0px 0px #ffb669;*/
+    border-radius: 5px;
+    border: 1px solid #ffb669;
+    background-color: #ffeeee;
 }
 
 .ChatMessageTitle {
@@ -304,10 +307,10 @@ a {
     box-shadow: 0px -2px 0px #c9baff;
     background-color: #eeeeee;
     height: 60px;
-    width: 470px;
+    width: 471px;
     position: absolute;
     bottom: -60px;
-    left: 220px;
+    left: 219px;
     z-index: 1;
 }
 
@@ -350,7 +353,7 @@ a {
     .ChatContent {
         margin-right: 0px;
         width: 100%;
-        box-shadow: none;
+        border: none;
     }
 
     .SidebarContent {
@@ -479,7 +482,7 @@ input[type="submit"] {
     padding-top: 10px;
 }
 
-.UploadIFrame {
+.FileTransferIFrame {
     vertical-align: middle;
     height: 25px;
     width: 20px;
