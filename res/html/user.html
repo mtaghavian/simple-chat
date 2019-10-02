@@ -7,7 +7,14 @@
 <div id="UserContent" class="UserContent" style="">
     <div id="ChatContent" class="ChatContent">
     </div>
-    <div id="SidebarContent" class="SidebarContent" onclick="sidebarClicked()">
+    <div  class="SidebarContent" id="SidebarContent">
+        <div class="SidebarEntry">
+            <input placeholder="Search" value="" class="Textfield" type="text" id="SearchField"
+                   style="flex: auto; margin: 3px 3px 3px 3px;padding-left: 5px;overflow: hidden;text-overflow: ellipsis; white-space: nowrap; height: 30px"/>
+            <img src="close.svg" class="Button ButtonTransPrimary" style="display:none; width: 17px;height: 17px;vertical-align: middle;margin: auto;padding: 5px 5px 5px 5px" onclick=""/>
+            <img src="search.svg" class="Button ButtonTransPrimary" style="width: 20px;height: 20px;vertical-align: middle;margin: auto;padding: 5px 5px 5px 5px" onclick=""/>
+        </div>
+        <div id="UsersList" onclick="sidebarClicked()"></div>
     </div>
     <div class="ChatFooter">
         <input placeholder="Write a message" value="" class="Textfield"
@@ -66,15 +73,15 @@
         ws.onmessage = function(evt){
             console.log("ws.onmessage");
             var chatContent = document.getElementById("ChatContent");
-            var sidebarContent = document.getElementById("SidebarContent");
+            var usersList = document.getElementById("UsersList");
             var elem = evt.data;
             var cmd = elem.substring(0, elem.indexOf("\n"));
             var body = elem.substring(elem.indexOf("\n") + 1, elem.length);
-            if(cmd == "users") {
-                sidebarContent.innerHTML = '';
-                sidebarContent.insertAdjacentHTML("beforeend", body);
-                sidebarContent.scrollTop = sidebarContent.scrollHeight;
-            } else if(cmd == "page") {
+            if(cmd === "users") {
+                usersList.innerHTML = '';
+                usersList.insertAdjacentHTML("beforeend", body);
+                usersList.scrollTop = usersList.scrollHeight;
+            } else if(cmd === "page") {
                 chatContent.innerHTML = '';
                 chatContent.insertAdjacentHTML("beforeend", body);
                 chatContent.scrollTop = chatContent.scrollHeight;

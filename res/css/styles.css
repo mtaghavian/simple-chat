@@ -27,15 +27,14 @@ input.Textfield {
     padding-right: 5px;
     border: none;
     font-family: arimo, sans-serif;
-    box-shadow: 0px 2px 0px #eeeeee;
     font-size: 13px;
     font-weight: normal;
+    background-color: white;
 }
 
 input.Textfield:focus {
     box-shadow: 0px 1px 0px #007bff;
     outline: none;
-    background-color: white;
 }
 
 .Modal {
