@@ -11,8 +11,8 @@
         <div class="SidebarEntry" style="box-shadow: 0px 1px 0px #bbbbbb;padding-left: 10px">
             <input placeholder="Search" value="" class="Textfield" type="text" id="SearchField" onkeyup="searchUsers()"
                    style="flex: auto; margin: 3px 3px 3px 3px;padding-left: 5px;overflow: hidden;text-overflow: ellipsis; white-space: nowrap; height: 30px"/>
-            <img src="close.svg" class="Button ButtonTransPrimary" style="display:none; width: 17px;height: 17px;vertical-align: middle;margin: auto;padding: 5px 5px 5px 5px" id="ClearUserSearchFieldButton"
-                 onclick='document.getElementById("SearchField").value = ""; searchUsers();'/>
+            <img src="close.svg" class="Button ButtonTransPrimary" style="display:none; width: 17px;height: 17px;vertical-align: middle;margin: auto;padding: 5px 5px 5px 5px"
+                 id="ClearUserSearchFieldButton" onclick='document.getElementById("SearchField").value = ""; searchUsers();'/>
             <img src="search.svg" class="Button ButtonTransPrimary" style="width: 20px;height: 20px;vertical-align: middle;margin: auto;padding: 5px 5px 5px 5px" onclick=""/>
         </div>
         <div id="UsersList" onclick="sidebarClicked()"></div>
