@@ -231,14 +231,14 @@ public class WebsocketController implements WebSocketHandler {
             params.clear();
             if (user.getUsername().equals(activeUsername)) {
                 params.put("name", user.getPresentation());
-                text += byteUtils.readPage("/sidebar-entry-active.html", params) + "\n";
+                text += byteUtils.readPage("/sidebar-entry-active.html", params);
             } else {
                 params.put("name", user.getPresentation());
                 params.put("onclick", " onclick=\'changePage(\"" + user.getUsername() + "\")\' ");
                 Integer count = countMap.get(user.getUsername());
                 params.put("count", (count == 0) ? "" :
                         "<div class=\"SidebarEntryUnreadCount SimpleText SimpleFont\">" + count + "</div>");
-                text += byteUtils.readPage("/sidebar-entry-passive.html", params) + "\n";
+                text += byteUtils.readPage("/sidebar-entry-passive.html", params);
             }
         }
         return text;

@@ -236,7 +236,7 @@ a {
     float: right;
     overflow: auto;
     border-radius: 5px;
-    border: 1px solid #c9baff;
+    border: 1px solid #bbbbbb;
     border-bottom-style: none;
 }
 
@@ -249,7 +249,7 @@ a {
     width: 200px;
     float: left;
     border-radius: 5px;
-    border: 1px solid #c9baff;
+    border: 1px solid #bbbbbb;
     opacity: 1;
     z-index: 2;
 }
@@ -303,7 +303,7 @@ a {
 }
 
 .ChatFooter {
-    box-shadow: 0px -2px 0px #c9baff;
+    /*box-shadow: 0px -1px 0px #c9baff;*/
     background-color: #eeeeee;
     height: 60px;
     width: 471px;

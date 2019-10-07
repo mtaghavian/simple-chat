@@ -240,3 +240,21 @@ function toggleSidebarDisplay() {
     var dis = sidebar.style.display;
     sidebar.style.display = (dis === "none") ? "block" : "none";
 }
+
+function searchUsers() {
+    var field = document.getElementById("SearchField");
+    document.getElementById("ClearUserSearchFieldButton").style.display = (field.value === "") ? "none" : "inline-block";
+    var list = document.getElementById("UsersList");
+    var children = list.childNodes;
+    for (i = 0; i < children.length; i++) {
+        if (children[i].id === undefined) {
+            console.log(children[i]);
+            continue;
+        }
+        if (children[i].id.toLowerCase().includes(field.value.toLowerCase())) {
+            children[i].style.removeProperty("display");
+        } else {
+            children[i].style.display = "none";
+        }
+    }
+}
