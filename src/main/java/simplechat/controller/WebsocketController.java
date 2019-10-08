@@ -94,6 +94,7 @@ public class WebsocketController implements WebSocketHandler {
         try {
             lock.lock();
             if (sessionMap.containsKey(wss.getId())) {
+                sessionMap.get(wss.getId()).logout();
                 sessionMap.remove(wss.getId());
             }
         } finally {

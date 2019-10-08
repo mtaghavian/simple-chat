@@ -145,7 +145,7 @@ public class MainController {
             passwordCookie.setMaxAge(0);
             response.addCookie(passwordCookie);
             Session session = sessionRepository.findById(httpSession.getId()).get();
-            session.setUser(null);
+            session.logout();
             response.sendRedirect("/home");
             return "Redirecting";
         } catch (IOException e) {

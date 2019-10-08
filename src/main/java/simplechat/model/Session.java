@@ -28,4 +28,8 @@ public class Session {
         this.user = user;
         this.lastModified = lastModified;
     }
+
+    public void logout() {
+        setUser(null);
+    }
 }
