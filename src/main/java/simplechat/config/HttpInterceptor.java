@@ -1,14 +1,17 @@
 package simplechat.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
 import simplechat.SimpleChatApplication;
 import simplechat.model.Session;
+import simplechat.model.UploadedFile;
 import simplechat.model.User;
 import simplechat.repository.SessionRepository;
+import simplechat.repository.UploadedFileRepository;
 import simplechat.repository.UserRepository;
 import simplechat.util.ByteUtils;
 
@@ -31,6 +34,9 @@ public class HttpInterceptor implements HandlerInterceptor {
 
     @Autowired
     private ByteUtils byteUtils;
+
+    @Autowired
+    private UploadedFileRepository uploadedFileRepository;
 
     private Set<String> allowedUrls = new HashSet<>();
     private Set<String> allowedFiles = new HashSet<>();
@@ -132,24 +138,33 @@ public class HttpInterceptor implements HandlerInterceptor {
             String uriLC = uri.toLowerCase();
             if (uriLC.endsWith(".svg")) {
                 response.setContentType("image/svg+xml");
-                response.getOutputStream().write(byteUtils.readBytes(new File((SimpleChatApplication.imageResourcePath + "/" + uri))));
+                response.getOutputStream().write(byteUtils.readBytes(new File((SimpleChatApplication.imageResourcePath + "/" + uri)), false));
             } else if (uriLC.endsWith(".css")) {
                 response.setContentType("text/css");
-                response.getOutputStream().write(byteUtils.readBytes(new File((SimpleChatApplication.styleResourcePath + "/" + uri))));
+                response.getOutputStream().write(byteUtils.readBytes(new File((SimpleChatApplication.styleResourcePath + "/" + uri)), false));
             } else if (uriLC.endsWith(".json")) {
                 response.setContentType("application/json");
-                response.getOutputStream().write(byteUtils.readBytes(new File((SimpleChatApplication.miscResourcePath + "/" + uri))));
+                response.getOutputStream().write(byteUtils.readBytes(new File((SimpleChatApplication.miscResourcePath + "/" + uri)), false));
             } else if (uriLC.endsWith(".js")) {
                 response.setContentType("text/javascript");
-                response.getOutputStream().write(byteUtils.readBytes(new File((SimpleChatApplication.scriptResourcePath + "/" + uri))));
+                response.getOutputStream().write(byteUtils.readBytes(new File((SimpleChatApplication.scriptResourcePath + "/" + uri)), false));
             } else if (uriLC.endsWith(".png")) {
                 response.setContentType("image/png");
-                response.getOutputStream().write(byteUtils.readBytes(new File((SimpleChatApplication.imageResourcePath + "/" + uri))));
+                response.getOutputStream().write(byteUtils.readBytes(new File((SimpleChatApplication.imageResourcePath + "/" + uri)), false));
             } else if (uriLC.endsWith(".ico")) {
                 response.setContentType("image/x-icon");
-                response.getOutputStream().write(byteUtils.readBytes(new File((SimpleChatApplication.imageResourcePath + "/" + uri))));
+                response.getOutputStream().write(byteUtils.readBytes(new File((SimpleChatApplication.imageResourcePath + "/" + uri)), false));
             }
             response.setStatus(HttpServletResponse.SC_OK);
+            return false;
+        }
+
+        if (uri.startsWith("/image-file-preview/")) {
+            String fileId = uri.substring(uri.indexOf('/', 1) + 1);
+            UploadedFile uploadedFile = uploadedFileRepository.findById(UUID.fromString(fileId)).get();
+            MediaType mediaType = byteUtils.getMediaType(uploadedFile.getName());
+            response.setContentType("" + mediaType);
+            response.getOutputStream().write(byteUtils.readBytes(new File(SimpleChatApplication.uploadDir + "/" + fileId), true));
             return false;
         }
 

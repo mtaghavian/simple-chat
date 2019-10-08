@@ -60,10 +60,10 @@ public class ByteUtils {
     }
 
     public String readString(File file) throws IOException {
-        return new String(readBytes(file), "UTF-8");
+        return new String(readBytes(file, false), "UTF-8");
     }
 
-    public synchronized byte[] readBytes(File file) throws IOException {
+    public synchronized byte[] readBytes(File file, boolean skipCaching) throws IOException {
         String path = file.getAbsolutePath();
         long lm = file.lastModified();
         if (cachedBytes.containsKey(path)) {
@@ -74,8 +74,10 @@ public class ByteUtils {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         copy(new FileInputStream(file), os, true, true);
         byte b[] = os.toByteArray();
-        lastModified.put(path, lm);
-        cachedBytes.put(path, b);
+        if (!skipCaching) {
+            lastModified.put(path, lm);
+            cachedBytes.put(path, b);
+        }
         return b;
     }
 

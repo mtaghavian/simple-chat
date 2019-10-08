@@ -48,8 +48,6 @@ public class MainController {
     @Autowired
     private UploadedFileRepository uploadedFileRepository;
 
-    public static final String uploadDir = "uploads";
-
     private User getUser(HttpSession session) {
         return sessionRepository.findById(session.getId()).get().getUser();
     }
@@ -177,8 +175,8 @@ public class MainController {
             if (!uploadedFile.isPresent()) {
                 throw new RuntimeException("FileNotFound: " + fileId);
             }
-            MediaType mediaType = byteUtils.getMediaType(uploadDir + "/" + uploadedFile.get().getName());
-            File file = new File(uploadDir + "/" + fileId);
+            MediaType mediaType = byteUtils.getMediaType(uploadedFile.get().getName());
+            File file = new File(SimpleChatApplication.uploadDir + "/" + fileId);
             InputStreamResource resource = new InputStreamResource(new FileInputStream(file));
             ResponseEntity<InputStreamResource> body = ResponseEntity.ok()
                     .contentType(mediaType)
@@ -197,7 +195,7 @@ public class MainController {
     @ResponseBody
     public String uploadFile(HttpServletRequest request, @RequestParam("file") MultipartFile file) {
         HttpSession httpSession = request.getSession();
-        new File(uploadDir).mkdir();
+        new File(SimpleChatApplication.uploadDir).mkdir();
         Map<String, String> params = new HashMap<>();
         params.put("pageTitle", "title");
         boolean success = true;
@@ -205,7 +203,7 @@ public class MainController {
             UploadedFile uploadedFile = new UploadedFile();
             uploadedFile.setName(file.getOriginalFilename());
             uploadedFileRepository.save(uploadedFile);
-            File transferFile = new File(uploadDir + "/" + uploadedFile.getId());
+            File transferFile = new File(SimpleChatApplication.uploadDir + "/" + uploadedFile.getId());
             FileOutputStream os = new FileOutputStream(transferFile);
             byteUtils.copy(file.getInputStream(), os, false, true);
             uploadedFile.setLength(transferFile.length());

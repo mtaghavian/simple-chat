@@ -12,7 +12,7 @@ import java.util.UUID;
 @Setter
 public class Message {
 
-    private boolean textMessage, self;
+    private boolean textMessage, self, imageFile;
 
     private String sender, body;
 
@@ -28,6 +28,7 @@ public class Message {
         m.setDate(date);
         m.setBody(body);
         m.setId(id);
+        m.setImageFile(imageFile);
         return m;
     }
 

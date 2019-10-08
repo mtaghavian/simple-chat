@@ -3,6 +3,7 @@ package simplechat.controller;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.*;
 import simplechat.SimpleChatApplication;
@@ -114,6 +115,8 @@ public class WebsocketController implements WebSocketHandler {
     public void sendFile(User sender, UploadedFile uploadedFile) throws IOException {
         Message msg = new Message();
         msg.setTextMessage(false);
+        MediaType mediaType = byteUtils.getMediaType(uploadedFile.getName());
+        msg.setImageFile(mediaType != null && mediaType.toString().contains("image"));
         msg.setBody(uploadedFile.getName() + " (" + byteUtils.humanReadableSize(uploadedFile.getLength()) + ")");
         msg.setDate(System.currentTimeMillis());
         msg.setSender(sender.getPresentation());
@@ -176,19 +179,18 @@ public class WebsocketController implements WebSocketHandler {
 
     private String createFileMessageUIComponent(Message msg) throws IOException {
         String text = "";
+        Map<String, String> params = new HashMap<>();
+        if (msg.isImageFile()) {
+            params.put("image", "<img src=\"image-file-preview/" + msg.getId() + "\" class=\"ChatImgFileMsgAttachment\" style=\"display: block\"/>");
+        } else {
+            params.put("image", "<img src=\"attachment.svg\" class=\"ChatFileMsgAttachmentSvg\" style=\"display: inline-block\"/>");
+        }
+        params.put("fileLink", " onclick=\'download(\"" + msg.getId() + "\")\' ");
+        params.put("body", msg.getBody());
+        params.put("date", byteUtils.formatTime(msg.getDate()));
         if (msg.isSelf()) {
-            Map<String, String> params = new HashMap<>();
-            params.put("fileIcon", "inline-block");
-            params.put("fileLink", " id=\"" + msg.getId() + "\" onclick=\'download(\"" + msg.getId() + "\")\' ");
-            params.put("body", msg.getBody() + ")");
-            params.put("date", byteUtils.formatTime(msg.getDate()));
             text += byteUtils.readPage("/chat-msg-right.html", params);
         } else {
-            Map<String, String> params = new HashMap<>();
-            params.put("fileIcon", "inline-block");
-            params.put("fileLink", " onclick=\'download(\"" + msg.getId() + "\")\' ");
-            params.put("body", msg.getBody());
-            params.put("date", byteUtils.formatTime(msg.getDate()));
             params.put("title", msg.getSender());
             text += byteUtils.readPage("/chat-msg-left.html", params);
         }
@@ -199,14 +201,14 @@ public class WebsocketController implements WebSocketHandler {
         String text = "";
         if (msg.isSelf()) {
             Map<String, String> params = new HashMap<>();
-            params.put("fileIcon", "none");
+            params.put("image", "");
             params.put("fileLink", "");
             params.put("body", msg.getBody());
             params.put("date", byteUtils.formatTime(msg.getDate()));
             text += byteUtils.readPage("/chat-msg-right.html", params);
         } else {
             Map<String, String> params = new HashMap<>();
-            params.put("fileIcon", "none");
+            params.put("image", "");
             params.put("fileLink", "");
             params.put("body", msg.getBody());
             params.put("date", byteUtils.formatTime(msg.getDate()));

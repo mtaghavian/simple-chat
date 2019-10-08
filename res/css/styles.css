@@ -295,10 +295,18 @@ a {
     margin: 0;
 }
 
-.ChatFileMessageSvg {
+.ChatFileMsgAttachmentSvg {
     width: 20px;
     height: 20px;
     padding-right: 5px;
+    vertical-align: middle;
+}
+
+.ChatImgFileMsgAttachment {
+    /*margin: auto;*/
+    padding: 0px 0px 10px 0px;
+    max-width: 100%;
+    height: auto;
     vertical-align: middle;
 }
 
