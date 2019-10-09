@@ -5,7 +5,10 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import simplechat.SimpleChatApplication;
 
+import javax.imageio.ImageIO;
 import javax.servlet.ServletContext;
+import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.io.*;
 import java.security.MessageDigest;
 import java.text.DateFormat;
@@ -183,6 +186,18 @@ public class ByteUtils {
         Date d = new Date(t);
         DateFormat formatter = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT, Locale.getDefault());
         return formatter.format(d);
+    }
+
+    public void makeThumbnailImage(int width, File input, File output) throws IOException {
+        BufferedImage orgImg = ImageIO.read(input);
+        if (orgImg == null) {
+            return;
+        }
+        int w = Math.min(width, orgImg.getWidth());
+        int h = (int) ((double) orgImg.getHeight() / orgImg.getWidth() * w);
+        BufferedImage img = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
+        img.createGraphics().drawImage(orgImg.getScaledInstance(w, h, Image.SCALE_SMOOTH), 0, 0, null);
+        ImageIO.write(img, "jpg", output);
     }
 
 }

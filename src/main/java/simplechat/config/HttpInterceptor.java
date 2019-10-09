@@ -161,10 +161,17 @@ public class HttpInterceptor implements HandlerInterceptor {
 
         if (uri.startsWith("/image-file-preview/")) {
             String fileId = uri.substring(uri.indexOf('/', 1) + 1);
-            UploadedFile uploadedFile = uploadedFileRepository.findById(UUID.fromString(fileId)).get();
-            MediaType mediaType = byteUtils.getMediaType(uploadedFile.getName());
+            File file = new File(SimpleChatApplication.uploadDir + "/" + fileId + ".thumbnail.jpg");
+            MediaType mediaType;
+            if (file.exists()) {
+                mediaType = byteUtils.getMediaType(file.getName());
+            } else {
+                file = new File(SimpleChatApplication.uploadDir + "/" + fileId);
+                UploadedFile uploadedFile = uploadedFileRepository.findById(UUID.fromString(fileId)).get();
+                mediaType = byteUtils.getMediaType(uploadedFile.getName());
+            }
             response.setContentType("" + mediaType);
-            response.getOutputStream().write(byteUtils.readBytes(new File(SimpleChatApplication.uploadDir + "/" + fileId), true));
+            response.getOutputStream().write(byteUtils.readBytes(file, true));
             return false;
         }
 

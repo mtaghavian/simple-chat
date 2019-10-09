@@ -16,6 +16,7 @@ import simplechat.repository.UserRepository;
 import simplechat.util.ByteUtils;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
@@ -122,6 +123,11 @@ public class WebsocketController implements WebSocketHandler {
         msg.setSender(sender.getPresentation());
         msg.setSelf(true);
         msg.setId(uploadedFile.getId());
+        if (msg.isImageFile()) {
+            byteUtils.makeThumbnailImage(500,
+                    new File(SimpleChatApplication.uploadDir + "/" + uploadedFile.getId()),
+                    new File(SimpleChatApplication.uploadDir + "/" + uploadedFile.getId() + ".thumbnail.jpg"));
+        }
         try {
             lock.lock();
             routeMessage(sender.getUsername(), msg);
@@ -181,9 +187,9 @@ public class WebsocketController implements WebSocketHandler {
         String text = "";
         Map<String, String> params = new HashMap<>();
         if (msg.isImageFile()) {
-            params.put("image", "<img src=\"image-file-preview/" + msg.getId() + "\" class=\"ChatImgFileMsgAttachment\" style=\"display: block\"/>");
+            params.put("image", "<img src=\"image-file-preview/" + msg.getId() + "\" class=\"ChatImgFileMsgAttachment\"/>");
         } else {
-            params.put("image", "<img src=\"attachment.svg\" class=\"ChatFileMsgAttachmentSvg\" style=\"display: inline-block\"/>");
+            params.put("image", "<img src=\"attachment.svg\" class=\"ChatFileMsgAttachmentSvg\"/>");
         }
         params.put("fileLink", " onclick=\'download(\"" + msg.getId() + "\")\' ");
         params.put("body", msg.getBody());
