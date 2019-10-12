@@ -21,7 +21,7 @@ public class Session {
 
     private WebSocketSession webSocketSession;
 
-    private String chateeUsername;
+    private String otherSideUsername;
 
     public Session(String id, User user, Long lastModified) {
         this.id = id;

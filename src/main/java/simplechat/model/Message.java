@@ -5,31 +5,55 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import javax.persistence.Column;
+import javax.persistence.Entity;
 import java.util.UUID;
 
+@Entity
 @NoArgsConstructor
 @Getter
 @Setter
-public class Message {
+public class Message extends BaseModel implements Comparable<Message> {
 
-    private boolean textMessage, self, imageFile;
+    @Column(length = 100)
+    private String senderUsername;
 
-    private String sender, body;
+    @Column(length = 100)
+    private String receiverUsername;
 
-    private long date;
+    @Column
+    private boolean textMessage;
 
-    private UUID id;
+    @Column
+    private boolean imageFile;
+
+    @Column(length = 100)
+    private String senderPresentation;
+
+    @Column
+    private String body;
+
+    @Column
+    private Long date;
+
+    @Column
+    private UUID fileId;
 
     public Message clone() {
         Message m = new Message();
+        m.setSenderUsername(senderUsername);
+        m.setReceiverUsername(receiverUsername);
         m.setTextMessage(textMessage);
-        m.setSelf(self);
-        m.setSender(sender);
-        m.setDate(date);
-        m.setBody(body);
-        m.setId(id);
         m.setImageFile(imageFile);
+        m.setSenderPresentation(senderPresentation);
+        m.setBody(body);
+        m.setDate(date);
+        m.setFileId(fileId);
         return m;
     }
 
+    @Override
+    public int compareTo(Message message) {
+        return date.compareTo(message.getDate());
+    }
 }
