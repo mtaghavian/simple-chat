@@ -89,7 +89,7 @@ public class WebsocketController implements WebSocketHandler {
                 changePage(body, currentSession, currentUser);
             } else if ("top".equals(cmd)) {
                 String otherSideUsername = currentSession.getOtherSideUsername();
-                sendMessages(currentUser.getUsername(), otherSideUsername, currentSession, body, "load");
+                sendMessages(currentUser.getUsername(), otherSideUsername, currentSession, Long.parseLong(body), "load");
             } else {
                 logger.error("Unsupported command!");
             }
@@ -98,32 +98,14 @@ public class WebsocketController implements WebSocketHandler {
         }
     }
 
-    private void sendMessages(String currentSideUsername, String otherSideUsername, Session currentSession, String fromId, String cmd) throws IOException {
+    private void sendMessages(String currentSideUsername, String otherSideUsername, Session currentSession, long date, String cmd) throws IOException {
         List<Message> messages;
         if (SimpleChatApplication.broadcastUsername.equals(otherSideUsername)) {
-            messages = messageRepository.findAllByReceiverUsername(otherSideUsername);
+            messages = messageRepository.fetchMessages(loadingMessagesChunksize, otherSideUsername, date);
         } else {
-            messages = messageRepository.findAllBySenderUsernameAndReceiverUsername(currentSideUsername, otherSideUsername);
-            if (!currentSideUsername.equals(otherSideUsername)) {
-                messages.addAll(messageRepository.findAllBySenderUsernameAndReceiverUsername(otherSideUsername, currentSideUsername));
-            }
+            messages = messageRepository.fetchMessages(loadingMessagesChunksize, currentSideUsername, otherSideUsername, date);
         }
         Collections.sort(messages);
-        if (fromId != null) {
-            int ind = 0;
-            for (int i = 0; i < messages.size(); i++) {
-                if (("" + messages.get(i).getId()).equals(fromId)) {
-                    ind = i;
-                    break;
-                }
-            }
-            messages = messages.subList(0, ind);
-        }
-        boolean checkForLoadingMore = false;
-        if (messages.size() > loadingMessagesChunksize) {
-            checkForLoadingMore = true;
-            messages = messages.subList(messages.size() - loadingMessagesChunksize, messages.size());
-        }
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < messages.size(); i++) {
             Message m = messages.get(i);
@@ -134,7 +116,7 @@ public class WebsocketController implements WebSocketHandler {
             }
         }
         currentSession.getWebSocketSession().sendMessage(new TextMessage(cmd + "\n" + sb.toString()));
-        if (checkForLoadingMore) {
+        if (messages.size() > 0) {
             currentSession.getWebSocketSession().sendMessage(new TextMessage("checkForLoadingMore\n"));
         }
     }
@@ -242,9 +224,10 @@ public class WebsocketController implements WebSocketHandler {
         String text = "";
         Map<String, String> params = new HashMap<>();
         params.put("id", "id=\"" + msg.getId() + "\"");
+        params.put("date", "date=\"" + msg.getDate() + "\"");
         params.put("onclick", " onclick=\'download(\"" + msg.getFileId() + "\")\' ");
         params.put("body", msg.getBody());
-        params.put("date", byteUtils.formatTime(msg.getDate()));
+        params.put("dateStr", byteUtils.formatTime(msg.getDate()));
         if (msg.isImageFile()) {
             params.put("image", "<img src=\"image-file-preview/" + msg.getFileId() + "\" class=\"ChatImgFileMsgAttachment\"/>");
         } else {
@@ -263,10 +246,11 @@ public class WebsocketController implements WebSocketHandler {
         String text = "";
         Map<String, String> params = new HashMap<>();
         params.put("id", "id=\"" + msg.getId() + "\"");
+        params.put("date", "date=\"" + msg.getDate() + "\"");
         params.put("image", "");
         params.put("onclick", "");
         params.put("body", msg.getBody());
-        params.put("date", byteUtils.formatTime(msg.getDate()));
+        params.put("dateStr", byteUtils.formatTime(msg.getDate()));
         if (msg.getSenderUsername().equals(receiverUsername)) {
             text += byteUtils.readPage("/chat-msg-right.html", params);
         } else {
@@ -308,9 +292,7 @@ public class WebsocketController implements WebSocketHandler {
         session.setOtherSideUsername(otherSideUsername);
         session.getWebSocketSession().sendMessage(new TextMessage(
                 createUsersListUIComponent(session.getUser().getUsername(), otherSideUsername)));
-        sendMessages(user.getUsername(), otherSideUsername, session, null, "page");
-
-
+        sendMessages(user.getUsername(), otherSideUsername, session, System.currentTimeMillis(), "page");
         UnreadMessageCounter unreadMessageCounter = unreadMessageCounterRepository.findByCurrentSideUsernameAndOtherSideUsername(user.getUsername(), otherSideUsername);
         if (unreadMessageCounter != null) {
             unreadMessageCounterRepository.delete(unreadMessageCounter);

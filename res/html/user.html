@@ -106,7 +106,7 @@
             } else if (cmd === "checkForLoadingMore") {
                 if (chatContent.scrollTop === 0) {
                     if (chatContent.childNodes.length !== 0) {
-                        ws.send("top\n" + chatContent.childNodes[0].id);
+                        ws.send("top\n" + chatContent.childNodes[0].getAttribute("date"));
                     }
                 }
             } else {
@@ -148,7 +148,7 @@
                 return;
             }
             if (chatContent.childNodes.length !== 0) {
-                ws.send("top\n" + chatContent.childNodes[0].id);
+                ws.send("top\n" + chatContent.childNodes[0].getAttribute("date"));
             }
         }
     };
