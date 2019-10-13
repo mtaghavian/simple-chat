@@ -105,7 +105,7 @@ public class WebsocketController implements WebSocketHandler {
         } else {
             messages = messageRepository.fetchMessages(loadingMessagesChunksize, currentSideUsername, otherSideUsername, date);
         }
-        Collections.sort(messages);
+        Collections.reverse(messages);
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < messages.size(); i++) {
             Message m = messages.get(i);
