@@ -3,6 +3,7 @@ package simplechat.controller;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.*;
@@ -39,12 +40,14 @@ public class WebsocketController implements WebSocketHandler {
     @Autowired
     private UnreadMessageCounterRepository unreadMessageCounterRepository;
 
-    public static final int loadingMessagesChunksize = 20;
+    @Autowired
+    @Value("${loadingMessagesChunksize}")
+    public int loadingMessagesChunksize;
 
-    private static ReentrantLock lock = new ReentrantLock(true);
-    private Logger logger = LoggerFactory.getLogger(this.getClass());
-
-    private final static Map<String, Session> sessionMap = new HashMap<>();
+    private final ReentrantLock lock = new ReentrantLock(true);
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final Map<String, Session> sessionMapFromWSS = new HashMap<>();
+    private final Map<String, Session> sessionMapFromUN = new HashMap<>();
 
     @Override
     public void afterConnectionEstablished(WebSocketSession wss) throws IOException {
@@ -53,7 +56,8 @@ public class WebsocketController implements WebSocketHandler {
             Session session = getSession(wss);
             if ((session != null) && (session.getUser() != null)) {
                 session.setWebSocketSession(wss);
-                sessionMap.put(wss.getId(), session);
+                sessionMapFromWSS.put(wss.getId(), session);
+                sessionMapFromUN.put(session.getUser().getUsername(), session);
                 changePage(SimpleChatApplication.broadcastUsername, session, session.getUser());
                 session.getWebSocketSession().sendMessage(new TextMessage(
                         createUsersListUIComponent(session.getUser().getUsername(), session.getOtherSideUsername())));
@@ -67,10 +71,10 @@ public class WebsocketController implements WebSocketHandler {
     public void handleMessage(WebSocketSession wss, WebSocketMessage<?> webSocketMessage) throws Exception {
         try {
             lock.lock();
-            if (!sessionMap.containsKey(wss.getId())) {
+            if (!sessionMapFromWSS.containsKey(wss.getId())) {
                 return;
             }
-            Session currentSession = sessionMap.get(wss.getId());
+            Session currentSession = sessionMapFromWSS.get(wss.getId());
             User currentUser = currentSession.getUser();
             String payload = ((TextMessage) webSocketMessage).getPayload();
             String cmd = payload.substring(0, payload.indexOf("\n"));
@@ -125,9 +129,10 @@ public class WebsocketController implements WebSocketHandler {
     public void afterConnectionClosed(WebSocketSession wss, CloseStatus closeStatus) throws Exception {
         try {
             lock.lock();
-            if (sessionMap.containsKey(wss.getId())) {
-                sessionMap.get(wss.getId()).logout();
-                sessionMap.remove(wss.getId());
+            if (sessionMapFromWSS.containsKey(wss.getId())) {
+                sessionMapFromUN.remove(sessionMapFromWSS.get(wss.getId()).getUser().getUsername());
+                sessionMapFromWSS.get(wss.getId()).logout();
+                sessionMapFromWSS.remove(wss.getId());
             }
         } finally {
             lock.unlock();
@@ -168,7 +173,7 @@ public class WebsocketController implements WebSocketHandler {
     public void updateAllUserLists(String excludeUsername) {
         try {
             lock.lock();
-            sessionMap.values().forEach(x -> {
+            sessionMapFromWSS.values().forEach(x -> {
                 try {
                     if (x.getUser() != null) {
                         if (excludeUsername != null && x.getOtherSideUsername().equals(excludeUsername)) {
@@ -300,7 +305,7 @@ public class WebsocketController implements WebSocketHandler {
     }
 
     private void routeMessage(String senderUsername, Message msg) throws IOException {
-        Session currentSession = getUserSession(senderUsername);
+        Session currentSession = sessionMapFromUN.get(senderUsername);
         String otherSideUsername = currentSession.getOtherSideUsername();
         msg.setSenderUsername(senderUsername);
         msg.setReceiverUsername(otherSideUsername);
@@ -314,12 +319,12 @@ public class WebsocketController implements WebSocketHandler {
                 if (username.equals(senderUsername) || username.equals(SimpleChatApplication.broadcastUsername)) {
                     continue;
                 }
-                Session userSession = getUserSession(username);
+                Session userSession = sessionMapFromUN.get(username);
                 sendOtherSideMessage(msg, otherSideUsername, username, userSession);
             }
         } else {
             if (!otherSideUsername.equals(senderUsername)) {
-                Session otherSideSession = getUserSession(otherSideUsername);
+                Session otherSideSession = sessionMapFromUN.get(otherSideUsername);
                 sendOtherSideMessage(msg, senderUsername, otherSideUsername, otherSideSession);
             }
         }
@@ -347,14 +352,4 @@ public class WebsocketController implements WebSocketHandler {
             }
         }
     }
-
-    private Session getUserSession(String username) {
-        for (String sid : sessionMap.keySet()) {
-            if (sessionMap.get(sid).getUser().getUsername().equals(username)) {
-                return sessionMap.get(sid);
-            }
-        }
-        return null;
-    }
-
 }
