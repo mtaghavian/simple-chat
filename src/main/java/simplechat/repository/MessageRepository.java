@@ -16,14 +16,14 @@ public interface MessageRepository extends JpaRepository<Message, UUID> {
 
     public List<Message> findAllBySenderUsername(String receiver);
 
-    @Query(value = "SELECT top :top * FROM Message m WHERE (m.date < :date) and " +
-            "m.receiver_username=:receiver " +
-            "order by m.date desc ", nativeQuery = true)
-    public List<Message> fetchMessages(@Param("top") int top, @Param("receiver") String receiver, @Param("date") long date);
+    @Query(value = "select * from message m where(m.date < :date) and " +
+            "(m.receiver_username=:receiver) " +
+            "order by m.date desc limit :limit", nativeQuery = true)
+    public List<Message> fetchMessages(@Param("limit") int limit, @Param("receiver") String receiver, @Param("date") long date);
 
-    @Query(value = "SELECT top :top * FROM Message m WHERE (m.date < :date) and " +
+    @Query(value = "select * from message m where (m.date < :date) and " +
             "((m.sender_username=:sender and m.receiver_username=:receiver) or " +
             "(m.sender_username=:receiver and m.receiver_username=:sender)) " +
-            "order by m.date desc ", nativeQuery = true)
-    public List<Message> fetchMessages(@Param("top") int top, @Param("sender") String sender, @Param("receiver") String receiver, @Param("date") long date);
+            "order by m.date desc limit :limit", nativeQuery = true)
+    public List<Message> fetchMessages(@Param("limit") int limit, @Param("sender") String sender, @Param("receiver") String receiver, @Param("date") long date);
 }

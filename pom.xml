@@ -80,12 +80,6 @@
         <!--<artifactId>mysql-connector-java</artifactId>-->
         <!--<scope>runtime</scope>-->
         <!--</dependency>-->
-        <!--<dependency>-->
-        <!--<groupId>org.apache.derby</groupId>-->
-        <!--<artifactId>derby</artifactId>-->
-        <!--<version>10.11.1.1</version>-->
-        <!--</dependency>-->
-
         <dependency>
             <groupId>org.hibernate</groupId>
             <artifactId>hibernate-entitymanager</artifactId>
