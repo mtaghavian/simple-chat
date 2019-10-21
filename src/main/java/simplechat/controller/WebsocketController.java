@@ -94,6 +94,8 @@ public class WebsocketController implements WebSocketHandler {
             } else if ("top".equals(cmd)) {
                 String otherSideUsername = currentSession.getOtherSideUsername();
                 sendMessages(currentUser.getUsername(), otherSideUsername, currentSession, Long.parseLong(body), "load");
+            } else if ("ping".equals(cmd)) {
+                currentSession.getWebSocketSession().sendMessage(new TextMessage("pong\n"));
             } else {
                 logger.error("Unsupported command!");
             }

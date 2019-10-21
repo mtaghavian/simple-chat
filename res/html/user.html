@@ -109,7 +109,7 @@
                         ws.send("top\n" + chatContent.childNodes[0].getAttribute("date"));
                     }
                 }
-            } else {
+            } else if (cmd === "msg") {
                 chatContent.insertAdjacentHTML("beforeend", body);
                 chatContent.scrollTop = chatContent.scrollHeight;
             }
@@ -121,6 +121,13 @@
     }
 
     wsConnect();
+
+    setInterval(function(){
+        if (ws == null) {
+            return;
+        }
+        ws.send("ping\n");
+    }, 2000);
 
     function sendMessage() {
         if (ws == null) {
