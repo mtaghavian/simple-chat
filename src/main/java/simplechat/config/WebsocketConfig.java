@@ -1,5 +1,6 @@
 package simplechat.config;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.TaskScheduler;
@@ -15,6 +16,9 @@ import simplechat.controller.WebsocketController;
 @EnableWebSocket
 public class WebsocketConfig implements WebSocketConfigurer {
 
+    @Autowired
+    private WebsocketController websocketController;
+
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry reg) {
         reg.addHandler(socketHandler(), "/ws").setAllowedOrigins("*");
@@ -22,7 +26,7 @@ public class WebsocketConfig implements WebSocketConfigurer {
 
     @Bean
     public WebSocketHandler socketHandler() {
-        return new WebsocketController();
+        return websocketController;
     }
 
     @Bean
