@@ -1,10 +1,9 @@
-<div class="ChatMessage" <% $id %> <% $date %> >
+<div class="ChatMessage" id="<% $id %>" <% $date %> >
     <div class="ChatMessageLeft" <% $onclick %>>
         <div class="ChatMessageTitle"> <% $title %> </div>
         <br>
         <% $image %>
         <% $body %>
-        <br>
-        <span class="SimpleFont ChatMessageDate"> <% $dateStr %> </span>
     </div>
+    <span class="SimpleFont ChatMessageDate" style="float: left"> <% $dateStr %> </span>
 </div>

@@ -109,6 +109,8 @@
                         ws.send("top\n" + chatContent.childNodes[0].getAttribute("date"));
                     }
                 }
+            } else if(cmd === "delete-msg") {
+                document.getElementById(body).style.display = "none";
             } else if (cmd === "msg") {
                 chatContent.insertAdjacentHTML("beforeend", body);
                 chatContent.scrollTop = chatContent.scrollHeight;
@@ -147,6 +149,13 @@
         }
         ws.send("change-page\n" + uname);
         document.getElementById("messageField").value = "";
+    }
+
+    function deleteChatMessage(msgId) {
+        if (ws == null) {
+            return;
+        }
+        ws.send("delete-msg\n" + msgId);
     }
 
     chatContent.onscroll = function () {

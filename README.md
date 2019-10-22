@@ -35,6 +35,9 @@ This application also demonstrates some user interface capabilities such as:
 Masoud Taghavian (masoud.taghavian@gmail.com)  
 Enjoy!
 
+## Demo deploy
+You can check out a demo of this application on [Heroku deploy](https://mtaghavian-simplechat.herokuapp.com/)
+
 ## Screenshots
 ![screenshot1](images/sc1.png "Home page")
 ![screenshot2](images/sc2.png "Login page")

@@ -8,10 +8,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.socket.*;
 import simplechat.SimpleChatApplication;
 import simplechat.model.*;
-import simplechat.repository.MessageRepository;
-import simplechat.repository.SessionRepository;
-import simplechat.repository.UnreadMessageCounterRepository;
-import simplechat.repository.UserRepository;
+import simplechat.repository.*;
 import simplechat.util.ByteUtils;
 
 import java.io.ByteArrayInputStream;
@@ -37,6 +34,12 @@ public class WebsocketController implements WebSocketHandler {
 
     @Autowired
     private UnreadMessageCounterRepository unreadMessageCounterRepository;
+
+    @Autowired
+    private FileInfoRepository fileInfoRepository;
+
+    @Autowired
+    private FileDataRepository fileDataRepository;
 
     @Autowired
     @Value("${loadingMessagesChunksize}")
@@ -89,6 +92,19 @@ public class WebsocketController implements WebSocketHandler {
                 routeMessage(currentUser.getUsername(), msg);
             } else if ("change-page".equals(cmd)) {
                 changePage(body, currentSession, currentUser);
+            } else if ("delete-msg".equals(cmd)) {
+                Message msg = messageRepository.findById(UUID.fromString(body)).get();
+                if (!msg.isTextMessage()) {
+                    FileInfo fileInfo = fileInfoRepository.findById(msg.getFileInfoId()).get();
+                    fileDataRepository.deleteById(fileInfo.getFileDataId());
+                    if (fileInfo.getImgPrevFileDataId() != null) {
+                        fileDataRepository.deleteById(fileInfo.getImgPrevFileDataId());
+                    }
+                    fileInfoRepository.deleteById(fileInfo.getId());
+                }
+                messageRepository.deleteById(msg.getId());
+                String pack = "delete-msg\n" + body;
+                routePacket(currentUser.getUsername(), currentSession.getOtherSideUsername(), pack, pack, currentSession);
             } else if ("top".equals(cmd)) {
                 String otherSideUsername = currentSession.getOtherSideUsername();
                 sendMessages(currentUser.getUsername(), otherSideUsername, currentSession, Long.parseLong(body), "load");
@@ -114,9 +130,9 @@ public class WebsocketController implements WebSocketHandler {
         for (int i = 0; i < messages.size(); i++) {
             Message m = messages.get(i);
             if (m.isTextMessage()) {
-                sb.append(createTextMessageUIComponent(m, currentSideUsername));
+                sb.append(createTextMessageUIComponent(m, currentSideUsername.equals(m.getSenderUsername())));
             } else {
-                sb.append(createFileMessageUIComponent(m, currentSideUsername));
+                sb.append(createFileMessageUIComponent(m, currentSideUsername.equals(m.getSenderUsername())));
             }
         }
         currentSession.getWebSocketSession().sendMessage(new TextMessage(cmd + "\n" + sb.toString()));
@@ -155,7 +171,7 @@ public class WebsocketController implements WebSocketHandler {
         msg.setBody(info.getName() + " (" + byteUtils.humanReadableSize(info.getLength()) + ")");
         msg.setDate(System.currentTimeMillis());
         msg.setSenderPresentation(sender.getPresentation());
-        msg.setFileId(info.getId());
+        msg.setFileInfoId(info.getId());
         try {
             lock.lock();
             routeMessage(sender.getUsername(), msg);
@@ -219,20 +235,20 @@ public class WebsocketController implements WebSocketHandler {
         return null;
     }
 
-    private String createFileMessageUIComponent(Message msg, String receiverUsername) throws IOException {
+    private String createFileMessageUIComponent(Message msg, boolean self) throws IOException {
         String text = "";
         Map<String, String> params = new HashMap<>();
-        params.put("id", "id=\"" + msg.getId() + "\"");
+        params.put("id", "" + msg.getId());
         params.put("date", "date=\"" + msg.getDate() + "\"");
-        params.put("onclick", " onclick=\'download(\"" + msg.getFileId() + "\")\' ");
+        params.put("onclick", " onclick=\'download(\"" + msg.getFileInfoId() + "\")\' ");
         params.put("body", msg.getBody());
         params.put("dateStr", byteUtils.formatTime(msg.getDate()));
         if (msg.isImageFile()) {
-            params.put("image", "<img src=\"image-file-preview/" + msg.getFileId() + "\" class=\"ChatImgFileMsgAttachment\"/>");
+            params.put("image", "<img src=\"image-file-preview/" + msg.getFileInfoId() + "\" class=\"ChatImgFileMsgAttachment\"/>");
         } else {
             params.put("image", "<img src=\"attachment.svg\" class=\"ChatFileMsgAttachmentSvg\"/>");
         }
-        if (msg.getSenderUsername().equals(receiverUsername)) {
+        if (self) {
             text += byteUtils.readPage("/chat-msg-right.html", params);
         } else {
             params.put("title", msg.getSenderPresentation());
@@ -241,16 +257,16 @@ public class WebsocketController implements WebSocketHandler {
         return text;
     }
 
-    private String createTextMessageUIComponent(Message msg, String receiverUsername) throws IOException {
+    private String createTextMessageUIComponent(Message msg, boolean self) throws IOException {
         String text = "";
         Map<String, String> params = new HashMap<>();
-        params.put("id", "id=\"" + msg.getId() + "\"");
+        params.put("id", "" + msg.getId());
         params.put("date", "date=\"" + msg.getDate() + "\"");
         params.put("image", "");
         params.put("onclick", "");
         params.put("body", msg.getBody());
         params.put("dateStr", byteUtils.formatTime(msg.getDate()));
-        if (msg.getSenderUsername().equals(receiverUsername)) {
+        if (self) {
             text += byteUtils.readPage("/chat-msg-right.html", params);
         } else {
             params.put("title", msg.getSenderPresentation());
@@ -304,9 +320,13 @@ public class WebsocketController implements WebSocketHandler {
         msg.setSenderUsername(senderUsername);
         msg.setReceiverUsername(otherSideUsername);
         messageRepository.save(msg);
-        currentSession.getWebSocketSession().sendMessage(new TextMessage(
-                "msg\n" + (msg.isTextMessage() ? createTextMessageUIComponent(msg, senderUsername) : createFileMessageUIComponent(msg, senderUsername))
-        ));
+        String selfPack = "msg\n" + (msg.isTextMessage() ? createTextMessageUIComponent(msg, true) : createFileMessageUIComponent(msg, true));
+        String otherPack = "msg\n" + (msg.isTextMessage() ? createTextMessageUIComponent(msg, false) : createFileMessageUIComponent(msg, false));
+        routePacket(senderUsername, otherSideUsername, selfPack, otherPack, currentSession);
+    }
+
+    private void routePacket(String senderUsername, String otherSideUsername, String selfPack, String otherPack, Session currentSession) throws IOException {
+        currentSession.getWebSocketSession().sendMessage(new TextMessage(selfPack));
         if (otherSideUsername.equals(SimpleChatApplication.broadcastUsername)) {
             for (User user : userRepository.findAll()) {
                 String username = user.getUsername();
@@ -314,35 +334,32 @@ public class WebsocketController implements WebSocketHandler {
                     continue;
                 }
                 Session userSession = sessionMapFromUN.get(username);
-                sendOtherSideMessage(msg, otherSideUsername, username, userSession);
+                sendOtherSideMessage(otherPack, otherSideUsername, username, userSession);
             }
         } else {
             if (!otherSideUsername.equals(senderUsername)) {
                 Session otherSideSession = sessionMapFromUN.get(otherSideUsername);
-                sendOtherSideMessage(msg, senderUsername, otherSideUsername, otherSideSession);
+                sendOtherSideMessage(otherPack, senderUsername, otherSideUsername, otherSideSession);
             }
         }
     }
 
-    private void sendOtherSideMessage(Message msg, String otherSideUsername, String username, Session userSession) throws IOException {
-        if ((userSession != null) && userSession.getOtherSideUsername().equals(otherSideUsername)) {
-            userSession.getWebSocketSession().sendMessage(new TextMessage(
-                    "msg\n" + (msg.isTextMessage() ? createTextMessageUIComponent(msg, username)
-                            : createFileMessageUIComponent(msg, username))
-            ));
+    private void sendOtherSideMessage(String msg, String otherSideUsername, String senderUsername, Session session) throws IOException {
+        if ((session != null) && session.getOtherSideUsername().equals(otherSideUsername)) {
+            session.getWebSocketSession().sendMessage(new TextMessage(msg));
         } else {
-            UnreadMessageCounter unreadMessageCounter = unreadMessageCounterRepository.findByCurrentSideUsernameAndOtherSideUsername(username, otherSideUsername);
+            UnreadMessageCounter unreadMessageCounter = unreadMessageCounterRepository.findByCurrentSideUsernameAndOtherSideUsername(senderUsername, otherSideUsername);
             int cnt = (unreadMessageCounter == null) ? 1 : (unreadMessageCounter.getCount() + 1);
             if (unreadMessageCounter == null) {
                 unreadMessageCounter = new UnreadMessageCounter();
-                unreadMessageCounter.setCurrentSideUsername(username);
+                unreadMessageCounter.setCurrentSideUsername(senderUsername);
                 unreadMessageCounter.setOtherSideUsername(otherSideUsername);
             }
             unreadMessageCounter.setCount(cnt);
             unreadMessageCounterRepository.save(unreadMessageCounter);
-            if (userSession != null) {
-                userSession.getWebSocketSession().sendMessage(new TextMessage(
-                        createUsersListUIComponent(userSession.getUser().getUsername(), userSession.getOtherSideUsername())));
+            if (session != null) {
+                session.getWebSocketSession().sendMessage(new TextMessage(
+                        createUsersListUIComponent(session.getUser().getUsername(), session.getOtherSideUsername())));
             }
         }
     }

@@ -37,7 +37,7 @@ public class Message extends BaseModel implements Comparable<Message> {
     private Long date;
 
     @Column
-    private UUID fileId;
+    private UUID fileInfoId;
 
     public Message clone() {
         Message m = new Message();
@@ -48,7 +48,7 @@ public class Message extends BaseModel implements Comparable<Message> {
         m.setSenderPresentation(senderPresentation);
         m.setBody(body);
         m.setDate(date);
-        m.setFileId(fileId);
+        m.setFileInfoId(fileInfoId);
         return m;
     }
 
