@@ -7,11 +7,12 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
 import simplechat.SimpleChatApplication;
+import simplechat.model.FileInfo;
 import simplechat.model.Session;
-import simplechat.model.UploadedFile;
 import simplechat.model.User;
+import simplechat.repository.FileDataRepository;
+import simplechat.repository.FileInfoRepository;
 import simplechat.repository.SessionRepository;
-import simplechat.repository.UploadedFileRepository;
 import simplechat.repository.UserRepository;
 import simplechat.util.ByteUtils;
 
@@ -36,7 +37,10 @@ public class HttpInterceptor implements HandlerInterceptor {
     private ByteUtils byteUtils;
 
     @Autowired
-    private UploadedFileRepository uploadedFileRepository;
+    private FileInfoRepository fileInfoRepository;
+
+    @Autowired
+    private FileDataRepository fileDataRepository;
 
     private Set<String> allowedUrls = new HashSet<>();
     private Set<String> allowedFiles = new HashSet<>();
@@ -160,18 +164,19 @@ public class HttpInterceptor implements HandlerInterceptor {
         }
 
         if (uri.startsWith("/image-file-preview/")) {
-            String fileId = uri.substring(uri.indexOf('/', 1) + 1);
-            File file = new File(SimpleChatApplication.uploadDir + "/" + fileId + ".thumbnail.jpg");
+            String fileInfoId = uri.substring(uri.indexOf('/', 1) + 1);
+            FileInfo info = fileInfoRepository.findById(UUID.fromString(fileInfoId)).get();
             MediaType mediaType;
-            if (file.exists()) {
-                mediaType = byteUtils.getMediaType(file.getName());
+            byte fileData[];
+            if (info.getImgPrevFileDataId() == null) {
+                mediaType = byteUtils.getMediaType(info.getName());
+                fileData = fileDataRepository.findById(info.getFileDataId()).get().getData();
             } else {
-                file = new File(SimpleChatApplication.uploadDir + "/" + fileId);
-                UploadedFile uploadedFile = uploadedFileRepository.findById(UUID.fromString(fileId)).get();
-                mediaType = byteUtils.getMediaType(uploadedFile.getName());
+                mediaType = byteUtils.getMediaType("a." + SimpleChatApplication.imgThumbnailFormat);
+                fileData = fileDataRepository.findById(info.getImgPrevFileDataId()).get().getData();
             }
             response.setContentType("" + mediaType);
-            response.getOutputStream().write(byteUtils.readBytes(file, true));
+            response.getOutputStream().write(fileData);
             return false;
         }
 

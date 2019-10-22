@@ -4,7 +4,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.*;
 import simplechat.SimpleChatApplication;
@@ -16,7 +15,6 @@ import simplechat.repository.UserRepository;
 import simplechat.util.ByteUtils;
 
 import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
@@ -150,20 +148,14 @@ public class WebsocketController implements WebSocketHandler {
         return false;
     }
 
-    public void sendFile(User sender, UploadedFile uploadedFile) throws IOException {
+    public void sendFile(User sender, FileInfo info) throws IOException {
         Message msg = new Message();
         msg.setTextMessage(false);
-        MediaType mediaType = byteUtils.getMediaType(uploadedFile.getName());
-        msg.setImageFile(mediaType != null && mediaType.toString().contains("image"));
-        msg.setBody(uploadedFile.getName() + " (" + byteUtils.humanReadableSize(uploadedFile.getLength()) + ")");
+        msg.setImageFile(info.getImgPrevFileDataId() != null);
+        msg.setBody(info.getName() + " (" + byteUtils.humanReadableSize(info.getLength()) + ")");
         msg.setDate(System.currentTimeMillis());
         msg.setSenderPresentation(sender.getPresentation());
-        msg.setFileId(uploadedFile.getId());
-        if (msg.isImageFile()) {
-            byteUtils.makeThumbnailImage(500,
-                    new File(SimpleChatApplication.uploadDir + "/" + uploadedFile.getId()),
-                    new File(SimpleChatApplication.uploadDir + "/" + uploadedFile.getId() + ".thumbnail.jpg"));
-        }
+        msg.setFileId(info.getId());
         try {
             lock.lock();
             routeMessage(sender.getUsername(), msg);

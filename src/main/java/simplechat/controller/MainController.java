@@ -8,11 +8,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import simplechat.SimpleChatApplication;
+import simplechat.model.FileData;
+import simplechat.model.FileInfo;
 import simplechat.model.Session;
-import simplechat.model.UploadedFile;
 import simplechat.model.User;
+import simplechat.repository.FileDataRepository;
+import simplechat.repository.FileInfoRepository;
 import simplechat.repository.SessionRepository;
-import simplechat.repository.UploadedFileRepository;
 import simplechat.repository.UserRepository;
 import simplechat.util.ByteUtils;
 
@@ -20,9 +22,8 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.util.HashMap;
@@ -46,7 +47,10 @@ public class MainController {
     private WebsocketController websocketController;
 
     @Autowired
-    private UploadedFileRepository uploadedFileRepository;
+    private FileInfoRepository fileInfoRepository;
+
+    @Autowired
+    private FileDataRepository fileDataRepository;
 
     private User getUser(HttpSession session) {
         return sessionRepository.findById(session.getId()).get().getUser();
@@ -169,21 +173,22 @@ public class MainController {
     }
 
     @GetMapping(value = "/download")
-    public ResponseEntity<InputStreamResource> download2(@RequestParam String fileId, HttpServletResponse response) {
+    public ResponseEntity<InputStreamResource> download(@RequestParam String fileId, HttpServletResponse response) {
         try {
-            Optional<UploadedFile> uploadedFile = uploadedFileRepository.findById(UUID.fromString(fileId));
-            if (!uploadedFile.isPresent()) {
+            Optional<FileInfo> infoOptional = fileInfoRepository.findById(UUID.fromString(fileId));
+            if (!infoOptional.isPresent()) {
                 throw new RuntimeException("FileNotFound: " + fileId);
             }
-            MediaType mediaType = byteUtils.getMediaType(uploadedFile.get().getName());
-            File file = new File(SimpleChatApplication.uploadDir + "/" + fileId);
-            InputStreamResource resource = new InputStreamResource(new FileInputStream(file));
+            FileInfo info = infoOptional.get();
+            MediaType mediaType = byteUtils.getMediaType(info.getName());
+            FileData fileDate = fileDataRepository.findById(info.getFileDataId()).get();
+            InputStreamResource resource = new InputStreamResource(new ByteArrayInputStream(fileDate.getData()));
             ResponseEntity<InputStreamResource> body = ResponseEntity.ok()
                     .contentType(mediaType)
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; " +
-                            "filename=\"" + uploadedFile.get().getName() + "\"; " +
-                            "filename*=UTF-8''" + URLEncoder.encode(uploadedFile.get().getName(), "UTF-8").replace("+", "%20"))
-                    .contentLength(file.length())
+                            "filename=\"" + info.getName() + "\"; " +
+                            "filename*=UTF-8''" + URLEncoder.encode(info.getName(), "UTF-8").replace("+", "%20"))
+                    .contentLength(info.getLength())
                     .body(resource);
             return body;
         } catch (IOException ioex) {
@@ -195,27 +200,41 @@ public class MainController {
     @ResponseBody
     public String uploadFile(HttpServletRequest request, @RequestParam("file") MultipartFile file) {
         HttpSession httpSession = request.getSession();
-        new File(SimpleChatApplication.uploadDir).mkdir();
         Map<String, String> params = new HashMap<>();
         params.put("pageTitle", "title");
         boolean success = true;
         try {
-            UploadedFile uploadedFile = new UploadedFile();
-            uploadedFile.setName(file.getOriginalFilename());
-            uploadedFileRepository.save(uploadedFile);
-            File transferFile = new File(SimpleChatApplication.uploadDir + "/" + uploadedFile.getId());
-            FileOutputStream os = new FileOutputStream(transferFile);
+            FileInfo info = new FileInfo();
+            info.setName(file.getOriginalFilename());
+            fileInfoRepository.save(info);
+
+            ByteArrayOutputStream os = new ByteArrayOutputStream();
             byteUtils.copy(file.getInputStream(), os, false, true);
-            uploadedFile.setLength(transferFile.length());
-            uploadedFileRepository.save(uploadedFile);
-            websocketController.sendFile(getUser(httpSession), uploadedFile);
+            FileData fileData = new FileData();
+            fileData.setData(os.toByteArray());
+            fileDataRepository.save(fileData);
+            info.setFileDataId(fileData.getId());
+            info.setLength((long) fileData.getData().length);
+
+            MediaType mediaType = byteUtils.getMediaType(info.getName());
+            boolean isImg = (mediaType != null && mediaType.toString().contains("image"));
+            if (isImg) {
+                os = new ByteArrayOutputStream();
+                byteUtils.makeThumbnailImage(SimpleChatApplication.imgThumbnailFormat, 500, new ByteArrayInputStream(fileData.getData()), os);
+                FileData imgPrevFileData = new FileData();
+                imgPrevFileData.setData(os.toByteArray());
+                fileDataRepository.save(imgPrevFileData);
+                info.setImgPrevFileDataId(imgPrevFileData.getId());
+            }
+
+            fileInfoRepository.save(info);
+            websocketController.sendFile(getUser(httpSession), info);
         } catch (Exception e) {
             e.printStackTrace();
             success = false;
         }
         params.put("body", "<div style=\"line-height: 25px;background-color: #eeeeee;\"> &nbsp;"
                 + (success ? "✓" : "✗")
-//                + " (" + LocalTime.now() + ")"
                 + "</div>");
         try {
             return byteUtils.readPage("/base.html", params);

@@ -6,17 +6,16 @@ import lombok.Setter;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.Lob;
 
 
 @Entity
 @NoArgsConstructor
 @Getter
 @Setter
-public class UploadedFile extends BaseModel {
+public class FileData extends BaseModel {
 
-    @Column(length = 200)
-    private String name;
-
+    @Lob
     @Column
-    private Long length;
+    private byte[] data;
 }

@@ -31,9 +31,9 @@ public class SimpleChatApplication implements ApplicationContextAware {
     public static final String scriptResourcePath = "res/js";
     public static final String imageResourcePath = "res/img";
     public static final String miscResourcePath = "res/misc";
-    public static final String uploadDir = "uploads";
     public static final String adminUsername = "admin";
     public static final String broadcastUsername = "broadcast";
+    public static final String imgThumbnailFormat = "jpg";
 
     @Autowired
     private UserRepository userRepository;
