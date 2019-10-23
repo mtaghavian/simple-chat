@@ -60,6 +60,11 @@ public class WebsocketController implements WebSocketHandler {
             lock.lock();
             Session session = getSession(wss);
             if ((session != null) && (session.getUser() != null)) {
+                Session oldSession = sessionMapFromUN.get(session.getUser().getUsername());
+                if (oldSession != null) {
+                    oldSession.getWebSocketSession().sendMessage(new TextMessage("redirect\n/"));
+                    removeWebSocketSession(oldSession.getWebSocketSession());
+                }
                 session.setWebSocketSession(wss);
                 sessionMapFromWSS.put(wss.getId(), session);
                 sessionMapFromUN.put(session.getUser().getUsername(), session);
@@ -149,12 +154,19 @@ public class WebsocketController implements WebSocketHandler {
     public void afterConnectionClosed(WebSocketSession wss, CloseStatus closeStatus) throws Exception {
         try {
             lock.lock();
-            if (sessionMapFromWSS.containsKey(wss.getId())) {
-                sessionMapFromUN.remove(sessionMapFromWSS.get(wss.getId()).getUser().getUsername());
-                sessionMapFromWSS.remove(wss.getId());
-            }
+            removeWebSocketSession(wss);
         } finally {
             lock.unlock();
+        }
+    }
+
+    private void removeWebSocketSession(WebSocketSession wss) {
+        if (sessionMapFromWSS.containsKey(wss.getId())) {
+            User user = sessionMapFromWSS.get(wss.getId()).getUser();
+            if (user != null) {
+                sessionMapFromUN.remove(user.getUsername());
+            }
+            sessionMapFromWSS.remove(wss.getId());
         }
     }
 

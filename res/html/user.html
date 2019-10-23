@@ -80,7 +80,7 @@
     var ws = null;
 
     function wsConnect() {
-        ws = new WebSocket("wss://" + window.location.host + "/ws");
+        ws = new WebSocket("ws://" + window.location.host + "/ws");
         ws.onopen = function () {
             console.log("ws.onopen");
         };
@@ -133,7 +133,7 @@
             return;
         }
         ws.send("ping\n");
-    }, 40000);
+    }, 20000);
 
     function sendMessage() {
         if (ws == null) {

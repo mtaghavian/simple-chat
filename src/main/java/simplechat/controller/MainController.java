@@ -26,7 +26,10 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URLEncoder;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 
 @RestController
 public class MainController {
@@ -139,8 +142,8 @@ public class MainController {
             Cookie passwordCookie = new Cookie("password", "");
             passwordCookie.setMaxAge(0);
             response.addCookie(passwordCookie);
-            List<Session> sessions = sessionRepository.findByUsername(getUser(httpSession).getUsername());
-            sessions.forEach(x -> x.logout());
+            Session session = sessionRepository.findById(httpSession.getId()).get();
+            session.logout();
             response.sendRedirect("/home");
             return "Redirecting";
         } catch (IOException e) {

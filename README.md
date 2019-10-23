@@ -24,7 +24,7 @@ This application also demonstrates some user interface capabilities such as:
 ## How to use
 1. Build application with "mvn package"
 2. Run application with "java -jar target/simplechat-0.0.1-SNAPSHOT.jar"
-3. Use Firefox or Chrome to open https://localhost:62600/ 
+3. Use Firefox or Chrome to open http://localhost:62600/ 
 4. Sign-up at least two user accounts
 5. Start chatting, you can do the following:
 	* Send text massages
