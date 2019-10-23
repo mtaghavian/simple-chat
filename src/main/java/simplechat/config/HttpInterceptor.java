@@ -85,14 +85,21 @@ public class HttpInterceptor implements HandlerInterceptor {
         }
     }
 
-    private void loginWithCookies(HttpServletRequest request, HttpSession httpSession, Session session) {
-        if (request.getCookies() != null) {
-            Map<String, String> cookies = new HashMap<>();
-            for (Cookie c : request.getCookies()) {
-                cookies.put(c.getName(), c.getValue());
-            }
+    private Properties getPropertiesFromCookies(Cookie cookie[]) {
+        if (cookie == null) {
+            return null;
+        }
+        Properties cookies = new Properties();
+        for (Cookie c : cookie) {
+            cookies.put(c.getName(), c.getValue());
+        }
+        return cookies;
+    }
+
+    public void loginWithCookies(Properties cookies, Session session) {
+        if (cookies != null) {
             if (cookies.containsKey("username") && cookies.containsKey("password")) {
-                User dbUser = userRepository.findByUsername(cookies.get("username"));
+                User dbUser = userRepository.findByUsername("" + cookies.get("username"));
                 if ((dbUser != null) && dbUser.getPassword().equals(cookies.get("password"))) {
                     session.setUser(dbUser);
                 }
@@ -136,7 +143,7 @@ public class HttpInterceptor implements HandlerInterceptor {
         sessionRepository.save(session);
 
         loginWithBasicAuth(request, httpSession, session);
-        loginWithCookies(request, httpSession, session);
+        loginWithCookies(getPropertiesFromCookies(request.getCookies()), session);
 
         if (allowedFiles.contains(uri)) {
             String uriLC = uri.toLowerCase();

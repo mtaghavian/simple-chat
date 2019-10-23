@@ -109,8 +109,10 @@
                         ws.send("top\n" + chatContent.childNodes[0].getAttribute("date"));
                     }
                 }
-            } else if(cmd === "delete-msg") {
+            } else if (cmd === "delete-msg") {
                 document.getElementById(body).style.display = "none";
+            } else if (cmd === "redirect") {
+                location.href = body;
             } else if (cmd === "msg") {
                 chatContent.insertAdjacentHTML("beforeend", body);
                 chatContent.scrollTop = chatContent.scrollHeight;
@@ -118,13 +120,15 @@
         };
         ws.onclose = function () {
             console.log("ws.onclose");
-            wsConnect();
+            setTimeout(function () {
+                wsConnect()
+            }, 1000);
         };
     }
 
     wsConnect();
 
-    setInterval(function(){
+    setInterval(function () {
         if (ws == null) {
             return;
         }

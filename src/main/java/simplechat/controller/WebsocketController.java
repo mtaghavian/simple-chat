@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.*;
 import simplechat.SimpleChatApplication;
+import simplechat.config.HttpInterceptor;
 import simplechat.model.*;
 import simplechat.repository.*;
 import simplechat.util.ByteUtils;
@@ -40,6 +41,9 @@ public class WebsocketController implements WebSocketHandler {
 
     @Autowired
     private FileDataRepository fileDataRepository;
+
+    @Autowired
+    private HttpInterceptor httpInterceptor;
 
     @Autowired
     @Value("${loadingMessagesChunksize}")
@@ -147,7 +151,6 @@ public class WebsocketController implements WebSocketHandler {
             lock.lock();
             if (sessionMapFromWSS.containsKey(wss.getId())) {
                 sessionMapFromUN.remove(sessionMapFromWSS.get(wss.getId()).getUser().getUsername());
-                sessionMapFromWSS.get(wss.getId()).logout();
                 sessionMapFromWSS.remove(wss.getId());
             }
         } finally {
@@ -224,13 +227,23 @@ public class WebsocketController implements WebSocketHandler {
                     Properties properties = new Properties();
                     properties.load(new ByteArrayInputStream(foundCookie.replaceAll(";", "\n").getBytes("UTF-8")));
                     String sid = properties.getProperty("JSESSIONID");
-                    Optional<Session> session = sessionRepository.findById(sid);
-                    return session.orElse(null);
+                    Optional<Session> sessionOptional = sessionRepository.findById(sid);
+                    if (sessionOptional.isPresent()) {
+                        return sessionOptional.get();
+                    } else {
+                        Session session = new Session(sid, null, System.currentTimeMillis());
+                        httpInterceptor.loginWithCookies(properties, session);
+                        if (session.getUser() != null) {
+                            sessionRepository.save(session);
+                            return session;
+                        } else {
+                            wss.sendMessage(new TextMessage("redirect\n/"));
+                        }
+                    }
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
-            return null;
         }
         return null;
     }

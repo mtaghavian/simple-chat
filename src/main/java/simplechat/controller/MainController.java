@@ -26,10 +26,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URLEncoder;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @RestController
 public class MainController {
@@ -90,23 +87,19 @@ public class MainController {
         HttpSession httpSession = request.getSession();
         User dbUser = userRepository.findByUsername(user.getUsername());
         if ((dbUser != null) && dbUser.getPassword().equals(byteUtils.hash(user.getPassword()))) {
-            if (!sessionRepository.findByUsername(dbUser.getUsername()).isEmpty()) {
-                return "No\nCurrently, there is someone online with this username";
-            } else {
-                Session session = sessionRepository.findById(httpSession.getId()).get();
-                session.setUser(dbUser);
-                if (user.getRememberMe()) {
-                    Cookie usernameCookie = new Cookie("username", user.getUsername());
-                    usernameCookie.setMaxAge(60 * 60 * 24 * 30 * 12);
-                    response.addCookie(usernameCookie);
-                    Cookie passwordCookie = new Cookie("password", byteUtils.hash(user.getPassword()));
-                    passwordCookie.setMaxAge(60 * 60 * 24 * 30 * 12);
-                    response.addCookie(passwordCookie);
-                }
-                String redirectedUri = session.getRedirectedUri();
-                redirectedUri = (redirectedUri != null) ? redirectedUri : "/user";
-                return "Yes\n" + redirectedUri;
+            Session session = sessionRepository.findById(httpSession.getId()).get();
+            session.setUser(dbUser);
+            if (user.getRememberMe()) {
+                Cookie usernameCookie = new Cookie("username", user.getUsername());
+                usernameCookie.setMaxAge(60 * 60 * 24 * 30 * 12);
+                response.addCookie(usernameCookie);
+                Cookie passwordCookie = new Cookie("password", byteUtils.hash(user.getPassword()));
+                passwordCookie.setMaxAge(60 * 60 * 24 * 30 * 12);
+                response.addCookie(passwordCookie);
             }
+            String redirectedUri = session.getRedirectedUri();
+            redirectedUri = (redirectedUri != null) ? redirectedUri : "/user";
+            return "Yes\n" + redirectedUri;
         } else {
             return "No\nIncorrect username and/or password";
         }
@@ -146,8 +139,8 @@ public class MainController {
             Cookie passwordCookie = new Cookie("password", "");
             passwordCookie.setMaxAge(0);
             response.addCookie(passwordCookie);
-            Session session = sessionRepository.findById(httpSession.getId()).get();
-            session.logout();
+            List<Session> sessions = sessionRepository.findByUsername(getUser(httpSession).getUsername());
+            sessions.forEach(x -> x.logout());
             response.sendRedirect("/home");
             return "Redirecting";
         } catch (IOException e) {
