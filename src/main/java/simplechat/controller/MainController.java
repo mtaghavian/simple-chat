@@ -135,6 +135,7 @@ public class MainController {
     @GetMapping("/logout")
     public String logout(HttpServletRequest request, HttpServletResponse response) {
         HttpSession httpSession = request.getSession();
+        User user = getUser(httpSession);
         try {
             Cookie usernameCookie = new Cookie("username", "");
             usernameCookie.setMaxAge(0);
@@ -143,6 +144,7 @@ public class MainController {
             passwordCookie.setMaxAge(0);
             response.addCookie(passwordCookie);
             Session session = sessionRepository.findById(httpSession.getId()).get();
+            websocketController.logout(user);
             session.logout();
             response.sendRedirect("/home");
             return "Redirecting";
@@ -181,9 +183,9 @@ public class MainController {
             InputStreamResource resource = new InputStreamResource(new ByteArrayInputStream(fileDate.getData()));
             ResponseEntity<InputStreamResource> body = ResponseEntity.ok()
                     .contentType(mediaType)
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; " +
-                            "filename=\"" + info.getName() + "\"; " +
-                            "filename*=UTF-8''" + URLEncoder.encode(info.getName(), "UTF-8").replace("+", "%20"))
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; "
+                            + "filename=\"" + info.getName() + "\"; "
+                            + "filename*=UTF-8''" + URLEncoder.encode(info.getName(), "UTF-8").replace("+", "%20"))
                     .contentLength(info.getLength())
                     .body(resource);
             return body;

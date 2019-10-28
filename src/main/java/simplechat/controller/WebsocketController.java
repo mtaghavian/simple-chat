@@ -62,13 +62,16 @@ public class WebsocketController implements WebSocketHandler {
             if ((session != null) && (session.getUser() != null)) {
                 Session oldSession = sessionMapFromUN.get(session.getUser().getUsername());
                 if (oldSession != null) {
-                    oldSession.getWebSocketSession().sendMessage(new TextMessage("redirect\n/"));
+                    if (oldSession.getWebSocketSession().isOpen()) {
+                        oldSession.getWebSocketSession().sendMessage(new TextMessage("redirect\n/"));
+                    }
                     removeWebSocketSession(oldSession.getWebSocketSession());
                 }
                 session.setWebSocketSession(wss);
                 sessionMapFromWSS.put(wss.getId(), session);
                 sessionMapFromUN.put(session.getUser().getUsername(), session);
-                changePage(SimpleChatApplication.broadcastUsername, session, session.getUser());
+                session.setOtherSideUsername(SimpleChatApplication.broadcastUsername);
+                changePage(session);
                 session.getWebSocketSession().sendMessage(new TextMessage(
                         createUsersListUIComponent(session.getUser().getUsername(), session.getOtherSideUsername())));
             }
@@ -100,20 +103,11 @@ public class WebsocketController implements WebSocketHandler {
 
                 routeMessage(currentUser.getUsername(), msg);
             } else if ("change-page".equals(cmd)) {
-                changePage(body, currentSession, currentUser);
+                currentSession.setOtherSideUsername(body);
+                changePage(currentSession);
             } else if ("delete-msg".equals(cmd)) {
                 Message msg = messageRepository.findById(UUID.fromString(body)).get();
-                if (!msg.isTextMessage()) {
-                    FileInfo fileInfo = fileInfoRepository.findById(msg.getFileInfoId()).get();
-                    fileDataRepository.deleteById(fileInfo.getFileDataId());
-                    if (fileInfo.getImgPrevFileDataId() != null) {
-                        fileDataRepository.deleteById(fileInfo.getImgPrevFileDataId());
-                    }
-                    fileInfoRepository.deleteById(fileInfo.getId());
-                }
-                messageRepository.deleteById(msg.getId());
-                String pack = "delete-msg\n" + body;
-                routePacket(currentUser.getUsername(), currentSession.getOtherSideUsername(), pack, pack, currentSession);
+                deleteMessage(msg, currentSession);
             } else if ("top".equals(cmd)) {
                 String otherSideUsername = currentSession.getOtherSideUsername();
                 sendMessages(currentUser.getUsername(), otherSideUsername, currentSession, Long.parseLong(body), "load");
@@ -160,6 +154,17 @@ public class WebsocketController implements WebSocketHandler {
         }
     }
 
+    public void logout(User user) {
+        try {
+            lock.lock();
+            if (user != null && sessionMapFromUN.containsKey(user.getUsername())) {
+                removeWebSocketSession(sessionMapFromUN.get(user.getUsername()).getWebSocketSession());
+            }
+        } finally {
+            lock.unlock();
+        }
+    }
+
     private void removeWebSocketSession(WebSocketSession wss) {
         if (sessionMapFromWSS.containsKey(wss.getId())) {
             User user = sessionMapFromWSS.get(wss.getId()).getUser();
@@ -198,11 +203,20 @@ public class WebsocketController implements WebSocketHandler {
     public void updateAllUserLists(String excludeUsername) {
         try {
             lock.lock();
+            if (excludeUsername != null) {
+                List<Message> messages = messageRepository.findAllBySenderUsername(excludeUsername);
+                messages.addAll(messageRepository.findAllByReceiverUsername(excludeUsername));
+                messages.forEach(x -> messageRepository.delete(x));
+                List<UnreadMessageCounter> unreadMessageCounters = unreadMessageCounterRepository.findAllByCurrentSideUsername(excludeUsername);
+                unreadMessageCounters.addAll(unreadMessageCounterRepository.findAllByOtherSideUsername(excludeUsername));
+                unreadMessageCounterRepository.deleteAll(unreadMessageCounters);
+            }
             sessionMapFromWSS.values().forEach(x -> {
                 try {
                     if (x.getUser() != null) {
                         if (excludeUsername != null && x.getOtherSideUsername().equals(excludeUsername)) {
                             x.setOtherSideUsername(SimpleChatApplication.broadcastUsername);
+                            changePage(x);
                         }
                         x.getWebSocketSession().sendMessage(new TextMessage(
                                 createUsersListUIComponent(x.getUser().getUsername(), x.getOtherSideUsername())));
@@ -211,14 +225,6 @@ public class WebsocketController implements WebSocketHandler {
                     e.printStackTrace();
                 }
             });
-            if (excludeUsername != null) {
-                List<Message> messages = messageRepository.findAllBySenderUsername(excludeUsername);
-                messages.addAll(messageRepository.findAllByReceiverUsername(excludeUsername));
-                messageRepository.deleteAll(messages);
-                List<UnreadMessageCounter> unreadMessageCounters = unreadMessageCounterRepository.findAllByCurrentSideUsername(excludeUsername);
-                unreadMessageCounters.addAll(unreadMessageCounterRepository.findAllByOtherSideUsername(excludeUsername));
-                unreadMessageCounterRepository.deleteAll(unreadMessageCounters);
-            }
         } finally {
             lock.unlock();
         }
@@ -320,20 +326,20 @@ public class WebsocketController implements WebSocketHandler {
                 params.put("onclick", " onclick=\'changePage(\"" + user.getUsername() + "\")\' ");
                 UnreadMessageCounter unreadMessageCounter = unreadMessageCounterRepository.findByCurrentSideUsernameAndOtherSideUsername(username, user.getUsername());
                 Integer count = (unreadMessageCounter == null) ? 0 : unreadMessageCounter.getCount();
-                params.put("count", (count == 0) ? "" :
-                        "<div class=\"SidebarEntryUnreadCount SimpleText SimpleFont\">" + count + "</div>");
+                params.put("count", (count == 0) ? ""
+                        : "<div class=\"SidebarEntryUnreadCount SimpleText SimpleFont\">" + count + "</div>");
                 text += byteUtils.readPage("/sidebar-entry-passive.html", params);
             }
         }
         return text;
     }
 
-    private void changePage(String otherSideUsername, Session session, User user) throws IOException {
-        session.setOtherSideUsername(otherSideUsername);
+    private void changePage(Session session) throws IOException {
+        String otherSideUsername = session.getOtherSideUsername();
         session.getWebSocketSession().sendMessage(new TextMessage(
                 createUsersListUIComponent(session.getUser().getUsername(), otherSideUsername)));
-        sendMessages(user.getUsername(), otherSideUsername, session, System.currentTimeMillis(), "page");
-        UnreadMessageCounter unreadMessageCounter = unreadMessageCounterRepository.findByCurrentSideUsernameAndOtherSideUsername(user.getUsername(), otherSideUsername);
+        sendMessages(session.getUser().getUsername(), otherSideUsername, session, System.currentTimeMillis(), "page");
+        UnreadMessageCounter unreadMessageCounter = unreadMessageCounterRepository.findByCurrentSideUsernameAndOtherSideUsername(session.getUser().getUsername(), otherSideUsername);
         if (unreadMessageCounter != null) {
             unreadMessageCounterRepository.delete(unreadMessageCounter);
         }
@@ -347,10 +353,12 @@ public class WebsocketController implements WebSocketHandler {
         messageRepository.save(msg);
         String selfPack = "msg\n" + (msg.isTextMessage() ? createTextMessageUIComponent(msg, true) : createFileMessageUIComponent(msg, true));
         String otherPack = "msg\n" + (msg.isTextMessage() ? createTextMessageUIComponent(msg, false) : createFileMessageUIComponent(msg, false));
-        routePacket(senderUsername, otherSideUsername, selfPack, otherPack, currentSession);
+        routePacket(selfPack, otherPack, currentSession);
     }
 
-    private void routePacket(String senderUsername, String otherSideUsername, String selfPack, String otherPack, Session currentSession) throws IOException {
+    private void routePacket(String selfPack, String otherPack, Session currentSession) throws IOException {
+        String senderUsername = currentSession.getUser().getUsername();
+        String otherSideUsername = currentSession.getOtherSideUsername();
         currentSession.getWebSocketSession().sendMessage(new TextMessage(selfPack));
         if (otherSideUsername.equals(SimpleChatApplication.broadcastUsername)) {
             for (User user : userRepository.findAll()) {
@@ -387,5 +395,11 @@ public class WebsocketController implements WebSocketHandler {
                         createUsersListUIComponent(session.getUser().getUsername(), session.getOtherSideUsername())));
             }
         }
+    }
+
+    public void deleteMessage(Message msg, Session currentSession) throws IOException {
+        String pack = "delete-msg\n" + msg.getId();
+        messageRepository.delete(msg);
+        routePacket(pack, pack, currentSession);
     }
 }
