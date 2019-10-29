@@ -15,10 +15,10 @@ import org.springframework.web.client.RestTemplate;
 public class DatabaseConfig {
 
     @Scheduled(fixedRate = 300000, initialDelay = 300000)
-    public void pingGoogleToKeepServiceAlive() {
+    public void pingEchoServiceToKeepServiceAlive() {
         try {
             RestTemplate restTemplate = new RestTemplate();
-            URI uri = new URI("http://www.google.com/");
+            URI uri = new URI("https://mtaghavian-heroku-echo.herokuapp.com/");
             restTemplate.getForEntity(uri, String.class);
         } catch (URISyntaxException ex) {
             ex.printStackTrace();
