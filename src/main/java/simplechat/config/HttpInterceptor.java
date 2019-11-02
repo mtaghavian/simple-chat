@@ -22,6 +22,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.File;
 import java.io.UnsupportedEncodingException;
+import java.sql.Blob;
 import java.util.*;
 
 @Component
@@ -177,10 +178,12 @@ public class HttpInterceptor implements HandlerInterceptor {
             byte fileData[];
             if (info.getImgPrevFileDataId() == null) {
                 mediaType = byteUtils.getMediaType(info.getName());
-                fileData = fileDataRepository.findById(info.getFileDataId()).get().getData();
+                Blob blob = fileDataRepository.findById(info.getFileDataId()).get().getData();
+                fileData = blob.getBytes(1, (int) blob.length());
             } else {
                 mediaType = byteUtils.getMediaType("a." + SimpleChatApplication.imgThumbnailFormat);
-                fileData = fileDataRepository.findById(info.getImgPrevFileDataId()).get().getData();
+                Blob blob = fileDataRepository.findById(info.getImgPrevFileDataId()).get().getData();
+                fileData = blob.getBytes(1, (int) blob.length());
             }
             response.setContentType("" + mediaType);
             response.getOutputStream().write(fileData);
@@ -211,10 +214,10 @@ public class HttpInterceptor implements HandlerInterceptor {
             params.put("pageTitle", uri.substring(1));
             if (uri.equals("/user")) {
                 params.put("optionsSvg",
-                        "<img src=\"options.svg\" " +
-                                "id=\"OptionsSvg\" " +
-                                "class=\"Button ButtonTransPrimary\"" +
-                                "onclick='toggleSidebarDisplay()'/>");
+                        "<img src=\"options.svg\" "
+                        + "id=\"OptionsSvg\" "
+                        + "class=\"Button ButtonTransPrimary\""
+                        + "onclick='toggleSidebarDisplay()'/>");
             } else {
                 params.put("optionsSvg", "");
             }

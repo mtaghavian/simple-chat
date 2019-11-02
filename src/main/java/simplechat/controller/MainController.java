@@ -22,14 +22,18 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import javax.persistence.EntityManager;
+import org.hibernate.Hibernate;
 
 @RestController
 public class MainController {
@@ -180,7 +184,7 @@ public class MainController {
             FileInfo info = infoOptional.get();
             MediaType mediaType = byteUtils.getMediaType(info.getName());
             FileData fileDate = fileDataRepository.findById(info.getFileDataId()).get();
-            InputStreamResource resource = new InputStreamResource(new ByteArrayInputStream(fileDate.getData()));
+            InputStreamResource resource = new InputStreamResource(fileDate.getData().getBinaryStream());
             ResponseEntity<InputStreamResource> body = ResponseEntity.ok()
                     .contentType(mediaType)
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; "
@@ -189,8 +193,8 @@ public class MainController {
                     .contentLength(info.getLength())
                     .body(resource);
             return body;
-        } catch (IOException ioex) {
-            throw new RuntimeException("IOException while reading file: " + fileId);
+        } catch (Exception ioex) {
+            throw new RuntimeException("Exception while reading file: " + fileId);
         }
     }
 
@@ -201,26 +205,31 @@ public class MainController {
         Map<String, String> params = new HashMap<>();
         params.put("pageTitle", "title");
         boolean success = true;
+        File tempFile = null;
         try {
+            tempFile = File.createTempFile("uploaded-file-", "");
             FileInfo info = new FileInfo();
             info.setName(file.getOriginalFilename());
             fileInfoRepository.save(info);
 
-            ByteArrayOutputStream os = new ByteArrayOutputStream();
+            FileOutputStream os = new FileOutputStream(tempFile);
             byteUtils.copy(file.getInputStream(), os, false, true);
             FileData fileData = new FileData();
-            fileData.setData(os.toByteArray());
+
+            EntityManager em = SimpleChatApplication.getBean(EntityManager.class);
+            fileData.setData(Hibernate.getLobCreator(em.unwrap(org.hibernate.Session.class))
+                    .createBlob(new FileInputStream(tempFile), tempFile.length()));
             fileDataRepository.save(fileData);
             info.setFileDataId(fileData.getId());
-            info.setLength((long) fileData.getData().length);
+            info.setLength(tempFile.length());
 
             MediaType mediaType = byteUtils.getMediaType(info.getName());
             boolean isImg = (mediaType != null && mediaType.toString().contains("image"));
             if (isImg) {
-                os = new ByteArrayOutputStream();
-                byteUtils.makeThumbnailImage(SimpleChatApplication.imgThumbnailFormat, 500, new ByteArrayInputStream(fileData.getData()), os);
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                byteUtils.makeThumbnailImage(SimpleChatApplication.imgThumbnailFormat, 500, new FileInputStream(tempFile), baos);
                 FileData imgPrevFileData = new FileData();
-                imgPrevFileData.setData(os.toByteArray());
+                imgPrevFileData.setData(new javax.sql.rowset.serial.SerialBlob(baos.toByteArray()));
                 fileDataRepository.save(imgPrevFileData);
                 info.setImgPrevFileDataId(imgPrevFileData.getId());
             }
@@ -230,6 +239,8 @@ public class MainController {
         } catch (Exception e) {
             e.printStackTrace();
             success = false;
+        } finally {
+            tempFile.delete();
         }
         params.put("body", "<div style=\"line-height: 25px;background-color: #eeeeee;\"> &nbsp;"
                 + (success ? "✓" : "✗")
