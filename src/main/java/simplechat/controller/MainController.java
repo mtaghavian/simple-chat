@@ -8,11 +8,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import simplechat.SimpleChatApplication;
-import simplechat.model.FileData;
 import simplechat.model.FileInfo;
 import simplechat.model.Session;
 import simplechat.model.User;
-import simplechat.repository.FileDataRepository;
 import simplechat.repository.FileInfoRepository;
 import simplechat.repository.SessionRepository;
 import simplechat.repository.UserRepository;
@@ -22,7 +20,6 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -32,8 +29,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import javax.persistence.EntityManager;
-import org.hibernate.Hibernate;
 
 @RestController
 public class MainController {
@@ -52,9 +47,6 @@ public class MainController {
 
     @Autowired
     private FileInfoRepository fileInfoRepository;
-
-    @Autowired
-    private FileDataRepository fileDataRepository;
 
     private User getUser(HttpSession session) {
         return sessionRepository.findById(session.getId()).get().getUser();
@@ -183,8 +175,8 @@ public class MainController {
             }
             FileInfo info = infoOptional.get();
             MediaType mediaType = byteUtils.getMediaType(info.getName());
-            FileData fileDate = fileDataRepository.findById(info.getFileDataId()).get();
-            InputStreamResource resource = new InputStreamResource(fileDate.getData().getBinaryStream());
+            InputStreamResource resource = new InputStreamResource(
+                    new FileInputStream(new File(SimpleChatApplication.uploadPath + "/" + info.getFileDataId())));
             ResponseEntity<InputStreamResource> body = ResponseEntity.ok()
                     .contentType(mediaType)
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; "
@@ -205,42 +197,27 @@ public class MainController {
         Map<String, String> params = new HashMap<>();
         params.put("pageTitle", "title");
         boolean success = true;
-        File tempFile = null;
         try {
-            tempFile = File.createTempFile("uploaded-file-", "");
             FileInfo info = new FileInfo();
             info.setName(file.getOriginalFilename());
-            fileInfoRepository.save(info);
-
-            FileOutputStream os = new FileOutputStream(tempFile);
+            File orgFile = new File(SimpleChatApplication.uploadPath + "/" + UUID.randomUUID());
+            FileOutputStream os = new FileOutputStream(orgFile);
             byteUtils.copy(file.getInputStream(), os, false, true);
-            FileData fileData = new FileData();
-
-            EntityManager em = SimpleChatApplication.getBean(EntityManager.class);
-            fileData.setData(Hibernate.getLobCreator(em.unwrap(org.hibernate.Session.class))
-                    .createBlob(new FileInputStream(tempFile), tempFile.length()));
-            fileDataRepository.save(fileData);
-            info.setFileDataId(fileData.getId());
-            info.setLength(tempFile.length());
+            info.setFileDataId(UUID.fromString(orgFile.getName()));
+            info.setLength(orgFile.length());
 
             MediaType mediaType = byteUtils.getMediaType(info.getName());
             boolean isImg = (mediaType != null && mediaType.toString().contains("image"));
             if (isImg) {
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                byteUtils.makeThumbnailImage(SimpleChatApplication.imgThumbnailFormat, 500, new FileInputStream(tempFile), baos);
-                FileData imgPrevFileData = new FileData();
-                imgPrevFileData.setData(new javax.sql.rowset.serial.SerialBlob(baos.toByteArray()));
-                fileDataRepository.save(imgPrevFileData);
-                info.setImgPrevFileDataId(imgPrevFileData.getId());
+                File imgPrevFile = new File(SimpleChatApplication.uploadPath + "/" + UUID.randomUUID());
+                byteUtils.makeThumbnailImage(SimpleChatApplication.imgThumbnailFormat, 500, new FileInputStream(orgFile), new FileOutputStream(imgPrevFile), true, true);
+                info.setImgPrevFileDataId(UUID.fromString(imgPrevFile.getName()));
             }
-
             fileInfoRepository.save(info);
             websocketController.sendFile(getUser(httpSession), info);
         } catch (Exception e) {
             e.printStackTrace();
             success = false;
-        } finally {
-            tempFile.delete();
         }
         params.put("body", "<div style=\"line-height: 25px;background-color: #eeeeee;\"> &nbsp;"
                 + (success ? "✓" : "✗")
@@ -252,5 +229,4 @@ public class MainController {
             return "";
         }
     }
-
 }

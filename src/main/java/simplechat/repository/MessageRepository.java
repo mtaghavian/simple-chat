@@ -1,5 +1,6 @@
 package simplechat.repository;
 
+import java.io.File;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -8,6 +9,7 @@ import simplechat.model.Message;
 
 import java.util.List;
 import java.util.UUID;
+import simplechat.SimpleChatApplication;
 import simplechat.model.FileInfo;
 
 @Repository
@@ -30,13 +32,12 @@ public interface MessageRepository extends JpaRepository<Message, UUID> {
 
     @Override
     public default void delete(Message msg) {
-        FileDataRepository fileDataRepository = simplechat.SimpleChatApplication.getBean(FileDataRepository.class);
         FileInfoRepository fileInfoRepository = simplechat.SimpleChatApplication.getBean(FileInfoRepository.class);
         if (!msg.isTextMessage()) {
             FileInfo fileInfo = fileInfoRepository.findById(msg.getFileInfoId()).get();
-            fileDataRepository.deleteById(fileInfo.getFileDataId());
+            new File(SimpleChatApplication.uploadPath + "/" + fileInfo.getFileDataId()).delete();
             if (fileInfo.getImgPrevFileDataId() != null) {
-                fileDataRepository.deleteById(fileInfo.getImgPrevFileDataId());
+                new File(SimpleChatApplication.uploadPath + "/" + fileInfo.getImgPrevFileDataId()).delete();
             }
             fileInfoRepository.deleteById(fileInfo.getId());
         }

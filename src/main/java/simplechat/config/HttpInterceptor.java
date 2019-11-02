@@ -10,7 +10,6 @@ import simplechat.SimpleChatApplication;
 import simplechat.model.FileInfo;
 import simplechat.model.Session;
 import simplechat.model.User;
-import simplechat.repository.FileDataRepository;
 import simplechat.repository.FileInfoRepository;
 import simplechat.repository.SessionRepository;
 import simplechat.repository.UserRepository;
@@ -22,7 +21,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.File;
 import java.io.UnsupportedEncodingException;
-import java.sql.Blob;
 import java.util.*;
 
 @Component
@@ -39,9 +37,6 @@ public class HttpInterceptor implements HandlerInterceptor {
 
     @Autowired
     private FileInfoRepository fileInfoRepository;
-
-    @Autowired
-    private FileDataRepository fileDataRepository;
 
     private Set<String> allowedUrls = new HashSet<>();
     private Set<String> allowedFiles = new HashSet<>();
@@ -178,12 +173,10 @@ public class HttpInterceptor implements HandlerInterceptor {
             byte fileData[];
             if (info.getImgPrevFileDataId() == null) {
                 mediaType = byteUtils.getMediaType(info.getName());
-                Blob blob = fileDataRepository.findById(info.getFileDataId()).get().getData();
-                fileData = blob.getBytes(1, (int) blob.length());
+                fileData = byteUtils.readBytes(new File(SimpleChatApplication.uploadPath + "/" + info.getFileDataId()), true);
             } else {
                 mediaType = byteUtils.getMediaType("a." + SimpleChatApplication.imgThumbnailFormat);
-                Blob blob = fileDataRepository.findById(info.getImgPrevFileDataId()).get().getData();
-                fileData = blob.getBytes(1, (int) blob.length());
+                fileData = byteUtils.readBytes(new File(SimpleChatApplication.uploadPath + "/" + info.getImgPrevFileDataId()), true);
             }
             response.setContentType("" + mediaType);
             response.getOutputStream().write(fileData);

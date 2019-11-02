@@ -188,7 +188,7 @@ public class ByteUtils {
         return formatter.format(d);
     }
 
-    public void makeThumbnailImage(String format, int width, InputStream input, OutputStream output) throws IOException {
+    public void makeThumbnailImage(String format, int width, InputStream input, OutputStream output, boolean closeInputStream, boolean closeOutputStream) throws IOException {
         BufferedImage orgImg = ImageIO.read(input);
         if (orgImg == null) {
             return;
@@ -198,6 +198,12 @@ public class ByteUtils {
         BufferedImage img = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
         img.createGraphics().drawImage(orgImg.getScaledInstance(w, h, Image.SCALE_SMOOTH), 0, 0, null);
         ImageIO.write(img, format, output);
+        if (closeOutputStream) {
+            output.flush();
+            output.close();
+        }
+        if (closeInputStream) {
+            input.close();
+        }
     }
-
 }

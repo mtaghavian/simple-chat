@@ -40,9 +40,6 @@ public class WebsocketController implements WebSocketHandler {
     private FileInfoRepository fileInfoRepository;
 
     @Autowired
-    private FileDataRepository fileDataRepository;
-
-    @Autowired
     private HttpInterceptor httpInterceptor;
 
     @Autowired

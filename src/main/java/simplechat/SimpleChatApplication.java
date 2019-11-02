@@ -1,5 +1,6 @@
 package simplechat;
 
+import java.io.File;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
@@ -34,6 +35,7 @@ public class SimpleChatApplication implements ApplicationContextAware {
     public static final String adminUsername = "admin";
     public static final String broadcastUsername = "broadcast";
     public static final String imgThumbnailFormat = "jpg";
+    public static final String uploadPath = "uploads";
 
     @Autowired
     private UserRepository userRepository;
@@ -49,6 +51,7 @@ public class SimpleChatApplication implements ApplicationContextAware {
 
     @PostConstruct
     public void starter() {
+        new File(uploadPath).mkdir();
         if (userRepository.findByUsername("admin") == null) {
             User admin = new User();
             admin.setUsername(adminUsername);
