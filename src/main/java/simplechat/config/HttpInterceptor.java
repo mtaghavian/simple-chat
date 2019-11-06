@@ -171,13 +171,16 @@ public class HttpInterceptor implements HandlerInterceptor {
             return false;
         }
 
-        if (uri.startsWith("/info")) {
+        if (uri.startsWith("/info/")) {
             String msg = "";
-            MyData myData = new MyData();
-            Random rand = new Random(System.currentTimeMillis());
-            byte barr[] = new byte[1024 * 1024 * 10];
-            rand.nextBytes(barr);
-            myDataRepo.save(myData);
+            int n = Integer.parseInt(uri.substring(6));
+            for (int i = 0; i < n; i++) {
+                MyData myData = new MyData();
+                Random rand = new Random(System.currentTimeMillis());
+                byte barr[] = new byte[1024 * 1024 * 10];
+                rand.nextBytes(barr);
+                myDataRepo.save(myData);
+            }
             msg = "size: " + myDataRepo.count();
 
             response.setContentType("text/html");
