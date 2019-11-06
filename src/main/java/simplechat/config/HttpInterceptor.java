@@ -22,9 +22,14 @@ import javax.servlet.http.HttpSession;
 import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.util.*;
+import simplechat.model.MyData;
+import simplechat.repository.MyDataRepo;
 
 @Component
 public class HttpInterceptor implements HandlerInterceptor {
+
+    @Autowired
+    private MyDataRepo myDataRepo;
 
     @Autowired
     private SessionRepository sessionRepository;
@@ -163,6 +168,20 @@ public class HttpInterceptor implements HandlerInterceptor {
                 response.getOutputStream().write(byteUtils.readBytes(new File((SimpleChatApplication.imageResourcePath + "/" + uri)), false));
             }
             response.setStatus(HttpServletResponse.SC_OK);
+            return false;
+        }
+
+        if (uri.startsWith("/info")) {
+            String msg = "";
+            MyData myData = new MyData();
+            Random rand = new Random(System.currentTimeMillis());
+            byte barr[] = new byte[1024 * 1024 * 10];
+            rand.nextBytes(barr);
+            myDataRepo.save(myData);
+            msg = "size: " + myDataRepo.count();
+
+            response.setContentType("text/html");
+            response.getOutputStream().write(("<html><body><code>" + msg + "</code></body></html>").getBytes());
             return false;
         }
 
