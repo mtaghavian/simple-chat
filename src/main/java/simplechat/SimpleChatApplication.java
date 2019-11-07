@@ -21,6 +21,8 @@ import simplechat.repository.UserRepository;
 import simplechat.util.ByteUtils;
 
 import javax.annotation.PostConstruct;
+import simplechat.model.MyData;
+import simplechat.repository.MyDataRepo;
 
 @SpringBootApplication
 @EnableScheduling
@@ -49,8 +51,14 @@ public class SimpleChatApplication implements ApplicationContextAware {
         SpringApplication.run(SimpleChatApplication.class, args);
     }
 
+    @Autowired
+    private MyDataRepo myDataRepo;
+
     @PostConstruct
     public void starter() {
+        MyData myData = new MyData();
+        myData.setData(("Started at " + byteUtils.formatTime(System.currentTimeMillis())).getBytes());
+        myDataRepo.save(myData);
         new File(uploadPath).mkdir();
         if (userRepository.findByUsername("admin") == null) {
             User admin = new User();
