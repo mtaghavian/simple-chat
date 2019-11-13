@@ -21,6 +21,7 @@ import simplechat.repository.UserRepository;
 import simplechat.util.ByteUtils;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import simplechat.model.MyData;
 import simplechat.repository.MyDataRepo;
 
@@ -53,6 +54,13 @@ public class SimpleChatApplication implements ApplicationContextAware {
 
     @Autowired
     private MyDataRepo myDataRepo;
+
+    @PreDestroy
+    public void onExit() {
+        MyData myData = new MyData();
+        myData.setData(("Exited at " + byteUtils.formatTime(System.currentTimeMillis())).getBytes());
+        myDataRepo.save(myData);
+    }
 
     @PostConstruct
     public void starter() {
